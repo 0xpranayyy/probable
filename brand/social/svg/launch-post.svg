@@ -1,0 +1,120 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1B1033"/>
+      <stop offset="0.55" stop-color="#120F24"/>
+      <stop offset="1" stop-color="#170B1E"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(140 100) rotate(90) scale(460 560)">
+      <stop stop-color="#8200FF" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#8200FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1080 560) rotate(90) scale(340 420)">
+      <stop stop-color="#FF5C23" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#FF5C23" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow1)"/>
+  <rect width="1200" height="630" fill="url(#glow2)"/>
+
+  <!-- large decorative curve, background -->
+  <path d="M -40 600 C -40 600, 160 600, 260 500 C 360 400, 420 420, 520 320 C 610 230, 660 240, 740 160"
+        stroke="#B87CFF" stroke-opacity="0.12" stroke-width="26" stroke-linecap="round" fill="none"/>
+
+  <!-- ===== LEFT: branding + copy ===== -->
+  <g transform="translate(64,56)">
+    <!-- logo + wordmark -->
+    <rect width="60" height="60" rx="16" fill="#FFFFFF" fill-opacity="0.07"/>
+    <path d="M13.2 43.2 C 13.2 43.2, 24 43.2, 28.2 34.2 C 32.4 25.2, 34.8 26.4, 39 21.6"
+          stroke="#B87CFF" stroke-width="8.4" stroke-linecap="round" fill="none"/>
+    <circle cx="40.8" cy="18.2" r="6.3" fill="#FF5C23"/>
+    <text x="76" y="40" font-family="'Bricolage Grotesque', sans-serif" font-weight="800" font-size="30" letter-spacing="-1" fill="#FFFFFF">Probable</text>
+
+    <!-- eyebrow -->
+    <g transform="translate(2,90)">
+      <rect width="112" height="34" rx="17" fill="#FFFFFF" fill-opacity="0.07"/>
+      <circle cx="20" cy="17" r="4" fill="#3ADFA5"/>
+      <text x="32" y="22" font-family="'JetBrains Mono', monospace" font-weight="600" font-size="12" letter-spacing="1.4" fill="#B3A8D9">NOW LIVE</text>
+    </g>
+  </g>
+
+  <g transform="translate(64,238)">
+    <text font-family="'Bricolage Grotesque', sans-serif" font-weight="800" font-size="46" letter-spacing="-1.6" fill="#FFFFFF">
+      <tspan x="0" y="0">Embed live prediction</tspan>
+      <tspan x="0" y="54">markets. Non-custodially.</tspan>
+    </text>
+    <text x="0" y="106" font-family="'Instrument Sans', sans-serif" font-weight="500" font-size="19" fill="#B3A8D9">
+      <tspan x="0" y="106">Real Polymarket data, streamed live. Wallets your</tspan>
+      <tspan x="0" y="134">users actually control. One API to build on.</tspan>
+    </text>
+  </g>
+
+  <!-- capability list -->
+  <g transform="translate(64,404)" font-family="'Instrument Sans', sans-serif" font-weight="600" font-size="16.5" fill="#E4DEF5">
+    <g>
+      <circle cx="6" cy="-5" r="3" fill="#8200FF"/>
+      <text x="22" y="0">Live market data &amp; streaming quotes</text>
+    </g>
+    <g transform="translate(0,38)">
+      <circle cx="6" cy="-5" r="3" fill="#8200FF"/>
+      <text x="22" y="0">Non-custodial wallets, built in</text>
+    </g>
+    <g transform="translate(0,76)">
+      <circle cx="6" cy="-5" r="3" fill="#8200FF"/>
+      <text x="22" y="0">One SDK: browse, watch, trade</text>
+    </g>
+  </g>
+
+  <!-- ===== RIGHT: real live-market preview card ===== -->
+  <g transform="translate(660,84)">
+    <rect width="476" height="462" rx="20" fill="#FFFFFF" fill-opacity="0.05" stroke="#FFFFFF" stroke-opacity="0.09"/>
+
+    <!-- card header -->
+    <g transform="translate(24,28)">
+      <circle cx="6" cy="-4" r="4" fill="#8200FF"/>
+      <text x="18" y="0" font-family="'Bricolage Grotesque', sans-serif" font-weight="700" font-size="15" fill="#FFFFFF">Probable Embed</text>
+      <g transform="translate(340,-14)">
+        <rect width="72" height="24" rx="12" fill="#17B877" fill-opacity="0.15"/>
+        <circle cx="14" cy="12" r="3.5" fill="#3ADFA5"/>
+        <text x="24" y="16" font-family="'JetBrains Mono', monospace" font-weight="600" font-size="10.5" letter-spacing="0.8" fill="#3ADFA5">LIVE</text>
+      </g>
+    </g>
+
+    <!-- real market rows (live data, fetched from the actual API) -->
+    <g transform="translate(24,70)">
+      <!-- row 1 -->
+      <g>
+        <rect width="428" height="108" rx="14" fill="#FFFFFF" fill-opacity="0.04"/>
+        <text x="20" y="30" font-family="'JetBrains Mono', monospace" font-weight="600" font-size="10.5" letter-spacing="1" fill="#FF5C23">GEOPOLITICS</text>
+        <text x="20" y="56" font-family="'Instrument Sans', sans-serif" font-weight="700" font-size="17" fill="#FFFFFF">Will the U.S. invade Iran before 2027?</text>
+        <rect x="20" y="72" width="120" height="22" rx="11" fill="#17B877" fill-opacity="0.14"/>
+        <text x="80" y="87" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-weight="700" font-size="12" fill="#3ADFA5">YES 30¢</text>
+        <rect x="150" y="72" width="120" height="22" rx="11" fill="#FF5C23" fill-opacity="0.14"/>
+        <text x="210" y="87" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-weight="700" font-size="12" fill="#FF9466">NO 70¢</text>
+      </g>
+
+      <!-- row 2 -->
+      <g transform="translate(0,122)">
+        <rect width="428" height="108" rx="14" fill="#FFFFFF" fill-opacity="0.04"/>
+        <text x="20" y="30" font-family="'JetBrains Mono', monospace" font-weight="600" font-size="10.5" letter-spacing="1" fill="#8200FF">SPORTS</text>
+        <text x="20" y="56" font-family="'Instrument Sans', sans-serif" font-weight="700" font-size="17" fill="#FFFFFF">World Cup Winner — Spain</text>
+        <rect x="20" y="72" width="120" height="22" rx="11" fill="#17B877" fill-opacity="0.14"/>
+        <text x="80" y="87" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-weight="700" font-size="12" fill="#3ADFA5">YES 59¢</text>
+        <rect x="150" y="72" width="120" height="22" rx="11" fill="#FF5C23" fill-opacity="0.14"/>
+        <text x="210" y="87" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-weight="700" font-size="12" fill="#FF9466">NO 41¢</text>
+      </g>
+
+      <!-- row 3 -->
+      <g transform="translate(0,244)">
+        <rect width="428" height="108" rx="14" fill="#FFFFFF" fill-opacity="0.04"/>
+        <text x="20" y="30" font-family="'JetBrains Mono', monospace" font-weight="600" font-size="10.5" letter-spacing="1" fill="#3ADFA5">ECONOMY</text>
+        <text x="20" y="56" font-family="'Instrument Sans', sans-serif" font-weight="700" font-size="17" fill="#FFFFFF">Fed Decision in July? — No change</text>
+        <rect x="20" y="72" width="120" height="22" rx="11" fill="#17B877" fill-opacity="0.14"/>
+        <text x="80" y="87" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-weight="700" font-size="12" fill="#3ADFA5">YES 95¢</text>
+        <rect x="150" y="72" width="120" height="22" rx="11" fill="#FF5C23" fill-opacity="0.14"/>
+        <text x="210" y="87" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-weight="700" font-size="12" fill="#FF9466">NO 5¢</text>
+      </g>
+    </g>
+  </g>
+</svg>
