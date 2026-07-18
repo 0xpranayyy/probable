@@ -5,9 +5,10 @@ import { prisma, User } from '@probable/db'
 import { scryptSync, randomBytes, timingSafeEqual } from 'node:crypto'
 
 // Import services
-import { WalletService } from './services/wallet'
+import { WalletService, getPrivy } from './services/wallet'
 import { PolymarketService } from './services/polymarket'
 import { LiveMarketsService } from './services/polymarketLive'
+import { PolymarketTradingService } from './services/polymarketTrading'
 import { RealtimeService } from './services/realtime'
 import { AiService } from './services/ai'
 import { PolyScoreService } from './services/polyscore'
@@ -162,25 +163,26 @@ app.post('/v1/markets', authMiddleware, async (c) => {
   })
 })
 
-// Abstract smart account creation
+// Real non-custodial wallet (Privy embedded, Polygon). Idempotent per user.
 app.post('/v1/wallets', authMiddleware, async (c) => {
-  const body = await c.req.json().catch(() => ({}))
-  const userId = body.userId
-  if (!userId) {
-    return c.json({ error: "Missing required parameter: userId" }, 400)
+  const user = c.get('user')
+  try {
+    const wallet = await WalletService.getOrCreateWallet(user.id)
+    const balance = await WalletService.getBalance(wallet.address)
+
+    return c.json({
+      userId: wallet.userId,
+      address: wallet.address,
+      walletId: wallet.walletId,
+      type: wallet.walletType,
+      chain: wallet.chain,
+      token: balance.token,
+      balance: balance.balance,
+      created: wallet.created,
+    })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 502)
   }
-
-  const wallet = WalletService.generateWallet(userId)
-  const balance = await WalletService.getBalance(wallet.address)
-
-  return c.json({
-    userId: wallet.userId,
-    address: wallet.address,
-    type: wallet.walletType,
-    token: balance.token,
-    balance: balance.balance,
-    deployed: wallet.deployed
-  })
 })
 
 // Retrieve order logs
@@ -191,32 +193,37 @@ app.get('/v1/trades', async (c) => {
   return c.json(trades)
 })
 
-// Execute trade
+// Execute trade (toy-exchange system — frozen; kept functional, not extended.
+// Real trading against actual Polymarket positions is being built separately.)
 app.post('/v1/trades', authMiddleware, async (c) => {
+  const user = c.get('user')
   const body = await c.req.json().catch(() => ({}))
-  const { marketId, type, amount, userId } = body
+  const { marketId, type, amount } = body
 
-  if (!marketId || !type || !amount || !userId) {
-    return c.json({ error: "Missing required parameters: marketId, type, amount, or userId" }, 400)
+  if (!marketId || !type || !amount) {
+    return c.json({ error: "Missing required parameters: marketId, type, or amount" }, 400)
   }
 
-  // 1. Resolve wallet address
-  const wallet = WalletService.generateWallet(userId)
-
-  // 2. Validate USDC balance
-  const balance = await WalletService.getBalance(wallet.address)
+  // 1. Resolve the caller's own real wallet (never another user's)
+  let wallet, balance
+  try {
+    wallet = await WalletService.getOrCreateWallet(user.id)
+    balance = await WalletService.getBalance(wallet.address)
+  } catch (err: any) {
+    return c.json({ error: err.message }, 502)
+  }
   const priceEstimate = type === "YES" ? 0.52 : 0.48
   const estimatedCost = amount * priceEstimate
 
   if (balance.balance < estimatedCost) {
-    return c.json({ error: "Insufficient balance in smart account paymaster wallet." }, 400)
+    return c.json({ error: "Insufficient USDC balance in your wallet." }, 400)
   }
 
-  // 3. Save order to SQLite database
+  // 3. Save order to the database
   const dbOrder = await prisma.order.create({
     data: {
       marketId,
-      userId: "acct_9K2mPx",
+      userId: user.id,
       type,
       amount,
       price: priceEstimate
@@ -240,7 +247,7 @@ app.post('/v1/trades', authMiddleware, async (c) => {
       amount,
       walletAddress: wallet.address,
       jobId: job.id
-    })
+    }, user.id)
     webhookLogs.push({
       id: `wh_${Math.random().toString(36).substring(2, 10)}`,
       url: body.webhookUrl,
@@ -272,6 +279,16 @@ app.post('/v1/predictions', authMiddleware, async (c) => {
   return c.json(analysis)
 })
 
+app.post('/v1/ai/draft-market', authMiddleware, async (c) => {
+  const body = await c.req.json().catch(() => ({}))
+  if (!body.prompt) {
+    return c.json({ error: "Prompt is required" }, 400)
+  }
+
+  const draft = await AiService.draftMarket(body.prompt)
+  return c.json(draft)
+})
+
 app.get('/v1/polyscore', authMiddleware, async (c) => {
   const userId = c.req.query("userId")
   if (!userId) {
@@ -283,7 +300,44 @@ app.get('/v1/polyscore', authMiddleware, async (c) => {
 })
 
 app.get('/v1/webhooks/logs', authMiddleware, async (c) => {
-  return c.json(webhookLogs)
+  const user = c.get('user')
+  const deliveries = await prisma.webhookDelivery.findMany({
+    where: { userId: user.id },
+    orderBy: { createdAt: 'desc' },
+    take: 50
+  })
+  return c.json(deliveries)
+})
+
+app.get('/v1/webhooks/deliveries', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const deliveries = await prisma.webhookDelivery.findMany({
+    where: { userId: user.id },
+    orderBy: { createdAt: 'desc' },
+    take: 50
+  })
+  return c.json(deliveries)
+})
+
+app.post('/v1/webhooks/deliveries/:id/retry', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const id = c.req.param('id')
+  const delivery = await prisma.webhookDelivery.findFirst({
+    where: { id, userId: user.id }
+  })
+
+  if (!delivery) {
+    return c.json({ error: "Webhook delivery not found" }, 404)
+  }
+
+  const payload = JSON.parse(delivery.payload)
+  const result = await NotificationService.sendWebhook(delivery.webhookUrl, delivery.event, payload, user.id)
+
+  return c.json({
+    success: result.dispatched,
+    statusCode: result.httpStatus,
+    error: result.error || null
+  })
 })
 
 app.get('/v1/config/pricing', async (c) => {
@@ -333,6 +387,68 @@ app.post('/v1/auth/login', async (c) => {
 
   const token = await createSession(user.id)
   return c.json({ token, user: publicUser(user) })
+})
+
+app.post('/v1/auth/privy', async (c) => {
+  const body = await c.req.json().catch(() => ({}))
+  const privyToken = body.token
+  if (!privyToken) {
+    return c.json({ error: "Privy access token is required" }, 400)
+  }
+
+  try {
+    const claims = await getPrivy().verifyAuthToken(privyToken)
+    const privyUser = await getPrivy().getUser(claims.userId) as any
+
+    const email = privyUser.email || privyUser.linkedAccounts?.find((a: any) => a.type === 'email')?.address || privyUser.linkedAccounts?.find((a: any) => a.type === 'email')?.emailAddress
+    if (!email) {
+      return c.json({ error: "No email address associated with this Privy account" }, 400)
+    }
+
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email },
+          { privyWalletId: claims.userId }
+        ]
+      }
+    })
+
+    if (!user) {
+      const embeddedWallet = privyUser.linkedAccounts?.find((a: any) => a.type === 'wallet' && a.walletClientType === 'privy')
+      const walletAddress = embeddedWallet?.address || null
+
+      user = await prisma.user.create({
+        data: {
+          email,
+          name: privyUser.name || email.split('@')[0],
+          password: hashPassword(randomBytes(16).toString('hex')),
+          walletAddress,
+          privyWalletId: claims.userId
+        }
+      })
+
+      const keyString = `sk_test_${randomBytes(16).toString('hex')}`
+      await prisma.apiKey.create({ data: { key: keyString, userId: user.id } })
+    } else {
+      if (!user.privyWalletId || !user.walletAddress) {
+        const embeddedWallet = privyUser.linkedAccounts?.find((a: any) => a.type === 'wallet' && a.walletClientType === 'privy')
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            privyWalletId: claims.userId,
+            walletAddress: user.walletAddress || embeddedWallet?.address || null
+          }
+        })
+      }
+    }
+
+    const sessionToken = await createSession(user.id)
+    return c.json({ token: sessionToken, user: publicUser(user) })
+  } catch (err: any) {
+    console.error("Privy authentication error:", err)
+    return c.json({ error: "Privy verification failed: " + err.message }, 401)
+  }
 })
 
 app.get('/v1/auth/me', authMiddleware, async (c) => {
@@ -402,6 +518,56 @@ app.get('/v1/live/book/:tokenId', async (c) => {
   } catch (err: any) {
     return c.json({ error: err.message }, 502)
   }
+})
+
+// ---------- real trading (mainnet Polygon, real USDC.e) ----------
+// Every route here is real: real Privy signatures, real Polymarket CLOB
+// calls, real on-chain reads. Nothing is simulated. Orders will be rejected
+// by Polymarket for real if the wallet has no funds/allowance — that is
+// correct behavior, not a bug.
+
+app.get('/v1/live/wallet/allowance', authMiddleware, async (c) => {
+  const user = c.get('user')
+  try {
+    return c.json(await PolymarketTradingService.getAllowance(user.id))
+  } catch (err: any) {
+    return c.json({ error: err.message }, 400)
+  }
+})
+
+// Builds and signs (via Privy) the on-chain approve() transaction granting
+// Polymarket's Exchange contract an allowance over the wallet's USDC.e.
+// Returns the signed transaction WITHOUT broadcasting it — broadcasting
+// spends real gas and is a deliberate separate step, not automatic.
+app.post('/v1/live/wallet/approve', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const body = await c.req.json().catch(() => ({}))
+  try {
+    const signed = await PolymarketTradingService.buildApproveTransaction(user.id, body.amount || 'max')
+    return c.json({ ...signed, broadcast: false, note: 'Signed but not sent — broadcasting this spends real MATIC/POL gas.' })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 400)
+  }
+})
+
+app.post('/v1/live/orders', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const body = await c.req.json().catch(() => ({}))
+  const { tokenId, side, price, size, eventSlug } = body
+  if (!tokenId || !side || !price || !size || !eventSlug) {
+    return c.json({ error: 'tokenId, side, price, size, and eventSlug are required' }, 400)
+  }
+  try {
+    const result = await PolymarketTradingService.placeOrder(user.id, { tokenId, side, price, size, eventSlug })
+    return c.json(result)
+  } catch (err: any) {
+    return c.json({ error: err.message }, 400)
+  }
+})
+
+app.get('/v1/live/positions', authMiddleware, async (c) => {
+  const user = c.get('user')
+  return c.json(await PolymarketTradingService.listPositions(user.id))
 })
 
 // ---------- watchlist ----------

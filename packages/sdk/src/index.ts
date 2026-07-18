@@ -133,6 +133,14 @@ export class ProbableClient {
       this.token = out.token;
       return out;
     },
+    privy: async (token: string): Promise<AuthResponse> => {
+      const out = await this.request("/v1/auth/privy", {
+        method: "POST",
+        body: JSON.stringify({ token }),
+      });
+      this.token = out.token;
+      return out;
+    },
     login: async (email: string, password: string): Promise<AuthResponse> => {
       const out = await this.request("/v1/auth/login", {
         method: "POST",
@@ -224,6 +232,32 @@ export class ProbableClient {
         body: JSON.stringify({ userId }),
       });
     },
+    getOrCreate: async () => {
+      return this.request("/v1/wallets", {
+        method: "POST"
+      });
+    },
+  };
+
+  public readonly liveTrading = {
+    getAllowance: async () => {
+      return this.request("/v1/live/wallet/allowance");
+    },
+    approve: async (amount?: string) => {
+      return this.request("/v1/live/wallet/approve", {
+        method: "POST",
+        body: JSON.stringify({ amount }),
+      });
+    },
+    placeOrder: async (order: { tokenId: string; side: "BUY" | "SELL"; price: number; size: number; eventSlug: string }) => {
+      return this.request("/v1/live/orders", {
+        method: "POST",
+        body: JSON.stringify(order),
+      });
+    },
+    listPositions: async () => {
+      return this.request("/v1/live/positions");
+    },
   };
 
   public readonly keys = {
@@ -250,6 +284,11 @@ export class ProbableClient {
   public readonly webhooks = {
     listLogs: async () => {
       return this.request("/v1/webhooks/logs");
+    },
+    retry: async (id: string) => {
+      return this.request(`/v1/webhooks/deliveries/${id}/retry`, {
+        method: "POST",
+      });
     },
   };
 }

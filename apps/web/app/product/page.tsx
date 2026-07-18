@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Navbar from "../../components/Navbar";
 import Ticker from "../../components/Ticker";
 import Footer from "../../components/Footer";
+import { API_BASE_URL } from "../../lib/config";
 
 const productBlocks = [
   {
@@ -54,7 +55,7 @@ const useCases = [
 ];
 
 const tiers = [
-  { name: "Sandbox", desc: "Build prototypes, evaluate endpoints, and run virtual mock trades.", rate: "0%", unit: "fees", feats: ["100 transactions/mo", "API key access", "Community support"], btnBg: "none", btnBorder: "rgba(29,24,50,.14)", btnColor: "#1D1832", cta: "Start testing", popular: false, bg: "#fff", border: "rgba(29,24,50,.08)", ink: "#1D1832", muted: "#6E6787", featColor: "#4A4363" },
+  { name: "Sandbox", desc: "Build prototypes, evaluate endpoints, and simulate real-time settlement.", rate: "0%", unit: "fees", feats: ["100 transactions/mo", "API key access", "Community support"], btnBg: "none", btnBorder: "rgba(29,24,50,.14)", btnColor: "#1D1832", cta: "Start testing", popular: false, bg: "#fff", border: "rgba(29,24,50,.08)", ink: "#1D1832", muted: "#6E6787", featColor: "#4A4363" },
   { name: "Scale", desc: "For scaling production apps requiring full trading capabilities and streaming.", rate: "0.5%", unit: "per trade", feats: ["Unlimited trades", "WebSockets quote stream", "Anti-wash shield checks", "Email support"], btnBg: "#1D1633", btnBorder: "none", btnColor: "#fff", cta: "Upgrade now", popular: true, bg: "#fff", border: "rgba(240,86,140,.45)", ink: "#1D1832", muted: "#6E6787", featColor: "#4A4363" },
   { name: "Platform", desc: "Custom features, dedicated nodes, and enterprise compliance gating.", rate: "Custom", unit: "volume pricing", feats: ["Dedicated RPC channels", "White-glove payment setups", "SLA support channel", "Compliance auditing"], btnBg: "none", btnBorder: "rgba(29,24,50,.14)", btnColor: "#1D1832", cta: "Contact sales", popular: false, bg: "#fff", border: "rgba(29,24,50,.08)", ink: "#1D1832", muted: "#6E6787", featColor: "#4A4363" }
 ];
@@ -66,7 +67,7 @@ export default function Product() {
   useEffect(() => {
     async function loadPricing() {
       try {
-        const res = await fetch("http://localhost:3001/v1/config/pricing");
+        const res = await fetch(`${API_BASE_URL}/v1/config/pricing`);
         if (res.ok) {
           const data = await res.json();
           setPricingTiers(data.tiers);

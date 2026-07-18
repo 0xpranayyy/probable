@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { API_BASE_URL, WS_BASE_URL } from "../lib/config";
 
 interface ProbableEmbedProps {
   marketId: string;
@@ -22,13 +23,13 @@ export default function ProbableEmbed({ marketId, theme = "dark", apiKey = "sk_t
   useEffect(() => {
     async function loadMarket() {
       try {
-        const res = await fetch("http://localhost:3001/v1/markets");
+        const res = await fetch(`${API_BASE_URL}/v1/markets`);
         const list = await res.json();
         const found = list.find((m: any) => m.id === marketId);
         if (found) {
           setMarket(found);
         } else {
-          // fallback mock if not found
+          // fallback defaults if not found
           setMarket({
             id: marketId,
             question: "Will ETH reach $5k by end of year?",
@@ -47,7 +48,7 @@ export default function ProbableEmbed({ marketId, theme = "dark", apiKey = "sk_t
   useEffect(() => {
     let ws: WebSocket;
     try {
-      ws = new WebSocket("ws://localhost:3001");
+      ws = new WebSocket(WS_BASE_URL);
       
       ws.onmessage = (event) => {
         try {
@@ -88,7 +89,7 @@ export default function ProbableEmbed({ marketId, theme = "dark", apiKey = "sk_t
     setTrading(true);
     setMessage("");
     try {
-      const res = await fetch("http://localhost:3001/v1/trades", {
+      const res = await fetch(`${API_BASE_URL}/v1/trades`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

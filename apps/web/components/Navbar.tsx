@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ProbableClient } from "@probable/sdk";
+import { usePrivy } from "@privy-io/react-auth";
 
 const navItems = [
   { label: "Home", href: "/", bg: "transparent", color: "#1D1832" },
@@ -20,6 +21,7 @@ export default function Navbar() {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [signInHover, setSignInHover] = useState(false);
   const [getKeysHover, setGetKeysHover] = useState(false);
+  const { logout } = usePrivy();
 
   // User state loaded on mount
   const [user, setUser] = useState<{ name: string; email: string } | null>(null);
@@ -32,6 +34,9 @@ export default function Navbar() {
   }, []);
 
   const handleSignOut = async () => {
+    try {
+      await logout();
+    } catch {}
     const cached = localStorage.getItem("probable_session");
     if (cached) {
       const sdk = new ProbableClient({ token: JSON.parse(cached).token, baseUrl: "http://localhost:3001" });

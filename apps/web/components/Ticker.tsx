@@ -1,9 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ProbableClient } from "@probable/sdk";
-
-const sdk = new ProbableClient({ baseUrl: "http://localhost:3001" });
+import { sdk } from "../lib/sdk";
 
 interface TickerItem {
   q: string;

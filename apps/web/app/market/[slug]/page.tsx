@@ -7,10 +7,9 @@ import Navbar from "../../../components/Navbar";
 import Ticker from "../../../components/Ticker";
 import Footer from "../../../components/Footer";
 import Star from "../../../components/Star";
-import { ProbableClient, LiveEvent, LiveMarket, PricePoint, OrderBook } from "@probable/sdk";
+import { LiveEvent, LiveMarket, PricePoint, OrderBook } from "@probable/sdk";
 import { useWatchlist } from "../../../lib/useWatchlist";
-
-const sdk = new ProbableClient({ baseUrl: "http://localhost:3001" });
+import { sdk } from "../../../lib/sdk";
 
 const INTERVALS: ["1D" | "1W" | "1M" | "ALL", "1d" | "1w" | "1m" | "max"][] = [
   ["1D", "1d"], ["1W", "1w"], ["1M", "1m"], ["ALL", "max"],

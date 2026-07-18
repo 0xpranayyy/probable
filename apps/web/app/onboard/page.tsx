@@ -5,7 +5,7 @@ import Navbar from "../../components/Navbar";
 import Ticker from "../../components/Ticker";
 import Link from "next/link";
 import Footer from "../../components/Footer";
-import { ProbableClient } from "@probable/sdk";
+import { getAuthedSdk } from "../../lib/sdk";
 
 export default function Onboarding() {
   const [step, setStep] = useState(0);
@@ -49,7 +49,7 @@ export default function Onboarding() {
   const handleNextStep = async () => {
     if (step === 2 && token) {
       try {
-        const client = new ProbableClient({ token, baseUrl: "http://localhost:3001" });
+        const client = getAuthedSdk(token);
         const keyData = await client.keys.create("test");
         setGeneratedApiKey(keyData.key);
       } catch (e) {

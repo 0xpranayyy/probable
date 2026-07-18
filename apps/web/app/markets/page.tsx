@@ -6,10 +6,9 @@ import Navbar from "../../components/Navbar";
 import Ticker from "../../components/Ticker";
 import Footer from "../../components/Footer";
 import Star from "../../components/Star";
-import { ProbableClient, LiveEvent } from "@probable/sdk";
+import { LiveEvent } from "@probable/sdk";
 import { useWatchlist } from "../../lib/useWatchlist";
-
-const sdk = new ProbableClient({ baseUrl: "http://localhost:3001" });
+import { sdk } from "../../lib/sdk";
 
 const CATEGORIES: { label: string; slug: string | null }[] = [
   { label: "Trending", slug: null },

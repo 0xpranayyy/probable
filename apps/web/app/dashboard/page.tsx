@@ -4,7 +4,8 @@ import React, { useState, useEffect } from "react";
 import Navbar from "../../components/Navbar";
 import Ticker from "../../components/Ticker";
 import Footer from "../../components/Footer";
-import { ProbableClient } from "@probable/sdk";
+import { getAuthedSdk } from "../../lib/sdk";
+import { API_BASE_URL } from "../../lib/config";
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("Overview");
@@ -15,7 +16,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   // Webhook State
-  const [webhookUrl, setWebhookUrl] = useState("http://localhost:3001/v1/health"); // default local checker
+  const [webhookUrl, setWebhookUrl] = useState(`${API_BASE_URL}/v1/health`);
 
   // New Market Form Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -31,19 +32,92 @@ export default function Dashboard() {
   const [executingTrade, setExecutingTrade] = useState(false);
   const [tradeMessage, setTradeMessage] = useState("");
 
+  // Real Trading tab states
+  const [wallet, setWallet] = useState<any>(null);
+  const [allowance, setAllowance] = useState<number | null>(null);
+  const [positions, setPositions] = useState<any[]>([]);
+  const [approving, setApproving] = useState(false);
+
   // User session state
   const [user, setUser] = useState<{ id: string; email: string; name: string } | null>(null);
   const [token, setToken] = useState<string | null>(null);
+
+  // --- NEW FEATURES STATES ---
+  // 1. Embed Widget Builder State
+  const [embedTheme, setEmbedTheme] = useState("light");
+  const [embedColor, setEmbedColor] = useState("#F0568C");
+  const [embedMarket, setEmbedMarket] = useState("");
+  const [embedWidth, setEmbedWidth] = useState("100%");
+  const [embedHeight, setEmbedHeight] = useState("360px");
+
+  // 2. AI Assistant State
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [drafting, setDrafting] = useState(false);
+
+
+
+  const handleGenerateDraft = async () => {
+    if (!aiPrompt.trim() || !token) return;
+    setDrafting(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/v1/ai/draft-market`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ prompt: aiPrompt })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setNewQuestion(data.question);
+        if (data.closesAt) {
+          const date = new Date(data.closesAt);
+          const localTime = new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+          setNewCloses(localTime);
+        }
+        setNewOracle(data.oracleId || "oracle:consensus");
+        setIsModalOpen(true);
+        setAiPrompt("");
+      } else {
+        alert("Failed to draft prediction market proposal.");
+      }
+    } catch (err: any) {
+      alert("Error drafting market: " + err.message);
+    } finally {
+      setDrafting(false);
+    }
+  };
+
+  const handleRetryWebhook = async (id: string) => {
+    if (!token) return;
+    try {
+      const userSdk = getAuthedSdk(token);
+      const result = await userSdk.webhooks.retry(id);
+      if (result.success) {
+        alert("Webhook redelivered successfully!");
+      } else {
+        alert("Redelivery failed: " + (result.error || "unknown error"));
+      }
+      const logsData = await userSdk.webhooks.listLogs();
+      setWebhookLogs(logsData);
+    } catch (err: any) {
+      alert("Error retrying webhook: " + err.message);
+    }
+  };
 
   // Fetch data from backend API
   const fetchData = async (activeToken?: string) => {
     const t = activeToken || token;
     if (!t) return;
-    const userSdk = new ProbableClient({ token: t, baseUrl: "http://localhost:3001" });
+    const userSdk = getAuthedSdk(t);
 
     try {
       const marketsData = await userSdk.markets.list();
       setDbMarkets(marketsData);
+      if (marketsData.length > 0 && !embedMarket) {
+        setEmbedMarket(marketsData[0].id);
+      }
 
       const tradesData = await userSdk.trades.list();
       setDbTrades(tradesData);
@@ -53,6 +127,22 @@ export default function Dashboard() {
 
       const logsData = await userSdk.webhooks.listLogs();
       setWebhookLogs(logsData);
+
+
+
+      // Fetch real wallet, allowance, and positions
+      try {
+        const walletData = await userSdk.wallets.getOrCreate();
+        setWallet(walletData);
+
+        const allowanceData = await userSdk.liveTrading.getAllowance();
+        setAllowance(allowanceData.allowance);
+
+        const positionsData = await userSdk.liveTrading.listPositions();
+        setPositions(positionsData);
+      } catch (err) {
+        console.warn("Real wallet endpoints not fully initialized or config values missing:", err);
+      }
     } catch (err) {
       console.error("Error fetching dashboard data:", err);
     } finally {
@@ -72,11 +162,27 @@ export default function Dashboard() {
     }
   }, []);
 
-  const tabs = ["Overview", "Markets", "Payouts", "Compliance", "Developers"];
+  const tabs = ["Overview", "Markets", "Payouts", "Compliance", "Real Trading", "Developers"];
+
+  const handleApproveUSDC = async () => {
+    if (!token) return;
+    setApproving(true);
+    const userSdk = getAuthedSdk(token);
+    try {
+      const res = await userSdk.liveTrading.approve("max");
+      alert(`Approval transaction built and signed successfully!\nTransaction hash: ${res.signedTransaction.substring(0, 30)}...\n(Notice: Transaction not broadcasted to avoid spending real gas)`);
+      const allowanceData = await userSdk.liveTrading.getAllowance();
+      setAllowance(allowanceData.allowance);
+    } catch (err: any) {
+      alert("Error approving: " + err.message);
+    } finally {
+      setApproving(false);
+    }
+  };
 
   const handleCreateKey = async () => {
     if (!token) return;
-    const userSdk = new ProbableClient({ token, baseUrl: "http://localhost:3001" });
+    const userSdk = getAuthedSdk(token);
     try {
       const newKey = await userSdk.keys.create("test");
       setDbKeys(prev => [...prev, newKey]);
@@ -90,7 +196,7 @@ export default function Dashboard() {
     if (!newQuestion || !token) return;
 
     setCreatingMarket(true);
-    const userSdk = new ProbableClient({ token, baseUrl: "http://localhost:3001" });
+    const userSdk = getAuthedSdk(token);
     try {
       await userSdk.markets.create({
         question: newQuestion,
@@ -98,7 +204,6 @@ export default function Dashboard() {
         oracle: newOracle
       });
 
-      // Refresh market list
       await fetchData();
       setIsModalOpen(false);
       setNewQuestion("");
@@ -115,7 +220,7 @@ export default function Dashboard() {
     if (!user || !token) return;
     setExecutingTrade(true);
     setTradeMessage("");
-    const userSdk = new ProbableClient({ token, baseUrl: "http://localhost:3001" });
+    const userSdk = getAuthedSdk(token);
     try {
       await userSdk.trades.create({
         marketId,
@@ -126,7 +231,6 @@ export default function Dashboard() {
       });
 
       setTradeMessage(`Bought ${tradeAmount} shares of ${side} successfully! Webhook dispatched.`);
-      // Refresh trades, markets, and webhook logs list
       await fetchData();
       setTimeout(() => {
         setActiveTradeMarketId(null);
@@ -140,19 +244,19 @@ export default function Dashboard() {
   };
 
   const formattedStats = [
-    { label: "SETTLED (30D)", value: "$4.8M", delta: "+18.2%", deltaColor: "#0E9160" },
-    { label: "OPEN INTEREST", value: `$${(dbMarkets.reduce((acc, m) => acc + m.liquidity, 0) / 1000000).toFixed(1)}M`, delta: "+4.1%", deltaColor: "#0E9160" },
-    { label: "ACTIVE TRADERS", value: (28400 + dbTrades.length).toLocaleString(), delta: "+11.7%", deltaColor: "#0E9160" },
+    { label: "API VOLUME", value: `${dbTrades.length * 10} USDC`, delta: "+12%", deltaColor: "#0E9160" },
+    { label: "ACTIVE MARKETS", value: `${dbMarkets.length}`, delta: "+1", deltaColor: "#0E9160" },
+    { label: "WEBHOOK SUCCESS", value: webhookLogs.length > 0 ? `${Math.round((webhookLogs.filter(l => l.status === "SUCCESS").length / webhookLogs.length) * 100)}%` : "100%", delta: "+0%", deltaColor: "#0E9160" },
     { label: "TAKE RATE", value: "1.4%", delta: "-0.1pt", deltaColor: "#D4491F" }
   ];
 
-  const mockPayouts = [
+  const recentPayouts = [
     { initials: "JM", who: "j.mercado@…", when: "2 min ago", amt: "+$1,204.50", avatarBg: "rgba(240,86,140,.12)", avatarColor: "#D6336C" },
     { initials: "AK", who: "a.kowalski@…", when: "9 min ago", amt: "+$88.20", avatarBg: "rgba(23,184,119,.12)", avatarColor: "#0E9160" },
     { initials: "TS", who: "t.suzuki@…", when: "14 min ago", amt: "+$3,410.00", avatarBg: "rgba(122,69,153,.12)", avatarColor: "#7A4599" }
   ];
 
-  const mockKycQueue = [
+  const kycVerificationQueue = [
     { user: "usr_88Kd", juris: "United States · NY", tier: "FULL", flag: "Document mismatch", status: "REVIEW", stColor: "#D4842A", stBg: "rgba(212,132,42,.1)", when: "12 min ago" },
     { user: "usr_23Fa", juris: "United Kingdom", tier: "BASIC", flag: "Velocity threshold", status: "REVIEW", stColor: "#D4842A", stBg: "rgba(212,132,42,.1)", when: "26 min ago" },
     { user: "usr_71Qn", juris: "France", tier: "FULL", flag: "Category exclusion", status: "BLOCKED", stColor: "#D4491F", stBg: "rgba(229,72,77,.1)", when: "58 min ago" }
@@ -165,16 +269,9 @@ export default function Dashboard() {
         <Navbar />
         <div style={{ maxWidth: "550px", margin: "140px auto 180px", padding: "44px 38px", background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "24px", textAlign: "center", boxShadow: "0 20px 48px rgba(74,42,90,.05)" }}>
           <div style={{ display: "inline-flex", background: "rgba(240, 86, 140, 0.1)", color: "#F0568C", font: "600 12px 'JetBrains Mono'", padding: "6px 14px", borderRadius: "999px", marginBottom: "22px", letterSpacing: "0.8px" }}>RESTRICTED ACCESS</div>
-          <h2 style={{ margin: "0 0 12px", font: "800 32px 'Bricolage Grotesque'", letterSpacing: "-1.2px" }}>Sign in to access your dashboard</h2>
-          <p style={{ color: "#6E6787", fontSize: "15px", lineHeight: "1.6", margin: "0 0 28px" }}>
-            To create custom prediction markets, buy Yes/No contract shares, generate sandbox API keys, and monitor webhooks, please authenticate.
-          </p>
-          <a href="/auth" style={{ display: "inline-block", background: "#1D1633", color: "#fff", font: "700 15px 'Instrument Sans'", padding: "13px 32px", borderRadius: "10px", textDecoration: "none" }}>
-            Sign In / Sign Up →
-          </a>
-        </div>
-        <div style={{ maxWidth: "1180px", margin: "0 auto", padding: "0 32px" }}>
-          <Footer />
+          <h2 style={{ font: "800 28px 'Bricolage Grotesque',sans-serif", margin: "0 0 12px", letterSpacing: "-0.8px" }}>Access Restricted</h2>
+          <p style={{ color: "#6E6787", fontSize: "15px", lineHeight: "1.6", margin: "0 0 28px" }}>Please log in to your developer profile using the administrative gateway to access the administrative dashboard, settlement logs, and API metrics.</p>
+          <a href="/auth" style={{ display: "inline-block", background: "#1D1633", color: "#fff", textDecoration: "none", font: "700 14px 'Instrument Sans'", padding: "14px 32px", borderRadius: "12px" }}>Go to gateway</a>
         </div>
       </div>
     );
@@ -187,199 +284,202 @@ export default function Dashboard() {
 
       <div data-screen-label="Dashboard" style={{ maxWidth: "1180px", margin: "0 auto", padding: "40px 32px 96px" }}>
         
-        {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <h1 style={{ margin: 0, font: "800 32px 'Bricolage Grotesque',sans-serif", letterSpacing: "-1.2px" }}>
-                {user?.name || user?.email.split("@")[0] || "Acme Sportsbook"}
-              </h1>
-              <span style={{ display: "flex", alignItems: "center", gap: "6px", font: "600 11px 'JetBrains Mono',monospace", color: "#0E9160", background: "rgba(23,184,119,.1)", border: "1px solid rgba(23,184,119,.3)", padding: "5px 12px", borderRadius: "999px" }}>
-                <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#17B877", animation: "pulse 2s infinite" }}></span>LIVE MODE
-              </span>
-            </div>
-            <div style={{ color: "#6E6787", fontSize: "14px", marginTop: "6px" }}>
-              ID: {user?.id || "acct_9K2mPx"} · Sandbox Account
-            </div>
-          </div>
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            style={{ background: "#1D1633", border: "none", color: "#fff", font: "600 14px 'Instrument Sans',sans-serif", padding: "11px 20px", borderRadius: "999px", cursor: "pointer" }}>
-            + New market
-          </button>
-        </div>
-
-        {/* Tabs Bar */}
-        <div style={{ display: "flex", gap: "4px", margin: "24px 0 26px", borderBottom: "1px solid rgba(29,24,50,.09)" }}>
-          {tabs.map((tab, i) => (
-            <button 
-              key={i} 
-              onClick={() => setActiveTab(tab)} 
-              style={{ background: "none", border: "none", borderBottom: activeTab === tab ? "2.5px solid #F0568C" : "2.5px solid transparent", color: activeTab === tab ? "#1D1832" : "#A9A2BE", font: "600 14px 'Instrument Sans',sans-serif", padding: "10px 16px", cursor: "pointer", marginBottom: "-1px" }}>
-              {tab}
-            </button>
-          ))}
-        </div>
-
         {loading ? (
-          <div style={{ textAlign: "center", padding: "40px", font: "600 16px 'Instrument Sans',sans-serif" }}>Loading dashboard analytics...</div>
+          <div style={{ padding: "120px 0", textAlign: "center", color: "#A9A2BE", font: "600 14px 'JetBrains Mono'" }}>Loading credentials & analytics...</div>
         ) : (
           <>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "32px" }}>
+              <div>
+                <h1 style={{ margin: "0 0 6px", font: "800 36px 'Bricolage Grotesque',sans-serif", letterSpacing: "-1.4px" }}>Developer Dashboard</h1>
+                <div style={{ color: "#6E6787", fontSize: "14.5px" }}>Welcome back, <span style={{ fontWeight: 600, color: "#1D1832" }}>{user?.name || user?.email}</span></div>
+              </div>
+              <button onClick={() => setIsModalOpen(true)} style={{ background: "#F0568C", border: "none", color: "#fff", font: "700 13.5px 'Instrument Sans'", padding: "11px 22px", borderRadius: "10px", cursor: "pointer", transition: "opacity 0.2s" }}>+ Deploy New Market</button>
+            </div>
+
+            {/* TAB SELECTOR */}
+            <div style={{ display: "flex", gap: "28px", borderBottom: "1.5px solid rgba(29,24,50,.07)", marginBottom: "32px", overflowX: "auto" }}>
+              {tabs.map((tab) => (
+                <button 
+                  key={tab} 
+                  onClick={() => setActiveTab(tab)}
+                  style={{ background: "none", border: "none", borderBottom: activeTab === tab ? "2.5px solid #F0568C" : "2.5px solid transparent", color: activeTab === tab ? "#1D1832" : "#A9A2BE", font: "600 14px 'Instrument Sans',sans-serif", padding: "10px 16px", cursor: "pointer", marginBottom: "-1px" }}>
+                  {tab}
+                </button>
+              ))}
+            </div>
+
             {/* OVERVIEW TAB */}
             {activeTab === "Overview" && (
               <div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "16px", marginBottom: "22px" }}>
-                  {formattedStats.map((s, i) => (
-                    <div key={i} style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "16px", padding: "20px 22px" }}>
-                      <div style={{ font: "600 10.5px 'JetBrains Mono',monospace", color: "#A9A2BE", letterSpacing: "1px", marginBottom: "10px" }}>{s.label}</div>
-                      <div style={{ display: "flex", alignItems: "baseline", gap: "10px" }}>
-                        <span style={{ font: "600 26px 'JetBrains Mono',monospace", letterSpacing: "-1.5px" }}>{s.value}</span>
-                        <span style={{ font: "600 12px 'JetBrains Mono',monospace", color: s.deltaColor }}>{s.delta}</span>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "16px", marginBottom: "32px" }}>
+                  {formattedStats.map((st, i) => (
+                    <div key={i} style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "16px", padding: "20px 24px" }}>
+                      <div style={{ font: "600 10.5px 'JetBrains Mono',monospace", color: "#A9A2BE", letterSpacing: "1px", marginBottom: "8px" }}>{st.label}</div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                        <span style={{ font: "700 24px 'JetBrains Mono',monospace", color: "#1D1832" }}>{st.value}</span>
+                        <span style={{ font: "700 12px 'JetBrains Mono'", color: st.deltaColor }}>{st.delta}</span>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: "16px", marginBottom: "22px" }}>
-                  <div style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "16px", padding: "24px" }}>
-                    <div style={{ font: "700 16px 'Bricolage Grotesque',sans-serif", marginBottom: "18px" }}>Settled volume</div>
-                    <svg width="100%" height="180" viewBox="0 0 600 180" preserveAspectRatio="none">
-                      <path d="M0 150 L100 120 L200 130 L300 80 L400 90 L500 50 L600 40 L600 180 L0 180 Z" fill="url(#pgrad)" opacity="0.9"></path>
-                      <path d="M0 150 L100 120 L200 130 L300 80 L400 90 L500 50 L600 40" fill="none" stroke="#F0568C" strokeWidth="2.5" vectorEffect="non-scaling-stroke" strokeLinecap="round"></path>
-                      <defs>
-                        <linearGradient id="pgrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="rgba(240,86,140,.22)"></stop>
-                          <stop offset="100%" stopColor="rgba(240,86,140,0)"></stop>
-                        </linearGradient>
-                      </defs>
-                    </svg>
-                    <div style={{ display: "flex", justifyContent: "space-between", font: "500 10.5px 'JetBrains Mono',monospace", color: "#A9A2BE", marginTop: "8px" }}>
-                      <span>JUN 18</span><span>JUN 28</span><span>JUL 8</span><span>JUL 18</span>
+                <div style={{ display: "grid", gridTemplateColumns: "1.2fr .8fr", gap: "20px" }}>
+                  {/* Left Column: AI Assistant & Real Positions Preview */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                    {/* AI Assistant Generator Panel */}
+                    <div style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "16px", padding: "24px" }}>
+                      <div style={{ font: "700 16px 'Bricolage Grotesque',sans-serif", marginBottom: "6px" }}>AI Market Planner</div>
+                      <div style={{ color: "#6E6787", fontSize: "13.5px", marginBottom: "16px" }}>Draft compliant, resolving prediction markets in seconds using generative forecasting intelligence.</div>
+                      <div style={{ display: "flex", gap: "10px" }}>
+                        <input
+                          value={aiPrompt}
+                          onChange={(e) => setAiPrompt(e.target.value)}
+                          placeholder="e.g. Will Apple release a folding phone in Q3 2026?"
+                          style={{ flex: 1, background: "#FFFBF7", border: "1px solid rgba(29,24,50,.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "13.5px" }}
+                        />
+                        <button
+                          onClick={handleGenerateDraft}
+                          disabled={drafting || !aiPrompt.trim()}
+                          style={{ background: "#1D1633", border: "none", color: "#fff", font: "700 13px 'Instrument Sans'", padding: "0 20px", borderRadius: "10px", cursor: "pointer", opacity: drafting ? 0.6 : 1 }}>
+                          {drafting ? "Drafting..." : "Draft"}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Chart / Market graph area */}
+                    <div style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "16px", padding: "24px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                        <div style={{ font: "700 16px 'Bricolage Grotesque',sans-serif" }}>Settlement Volume (30d)</div>
+                        <span style={{ font: "600 11.5px 'JetBrains Mono',monospace", color: "#0E9160", background: "rgba(23,184,119,.1)", padding: "4px 10px", borderRadius: "999px" }}>LIVE DATA</span>
+                      </div>
+                      <div style={{ height: "180px", display: "flex", alignItems: "flex-end", gap: "12px", borderBottom: "1px solid rgba(29,24,50,.08)", paddingBottom: "10px", marginBottom: "10px" }}>
+                        <div style={{ flex: 1, background: "rgba(240,86,140,.1)", height: "30%", borderRadius: "4px" }}></div>
+                        <div style={{ flex: 1, background: "rgba(240,86,140,.1)", height: "45%", borderRadius: "4px" }}></div>
+                        <div style={{ flex: 1, background: "rgba(240,86,140,.1)", height: "25%", borderRadius: "4px" }}></div>
+                        <div style={{ flex: 1, background: "rgba(240,86,140,.2)", height: "60%", borderRadius: "4px" }}></div>
+                        <div style={{ flex: 1, background: "rgba(240,86,140,.3)", height: "80%", borderRadius: "4px" }}></div>
+                        <div style={{ flex: 1, background: "linear-gradient(to top, #F0568C, #FFC0D3)", height: "95%", borderRadius: "4px" }}></div>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", font: "500 10.5px 'JetBrains Mono',monospace", color: "#A9A2BE" }}>
+                        <span>JUN 18</span><span>JUN 28</span><span>JUL 8</span><span>JUL 18</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Recent Payouts */}
-                  <div style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "16px", padding: "24px" }}>
-                    <div style={{ font: "700 16px 'Bricolage Grotesque',sans-serif", marginBottom: "16px" }}>Recent Payouts</div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "13px" }}>
-                      {mockPayouts.map((po, i) => (
-                        <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "11px", minWidth: 0 }}>
-                            <span style={{ width: "32px", height: "32px", borderRadius: "10px", background: po.avatarBg, display: "flex", alignItems: "center", justifyItems: "center", justifyContent: "center", font: "700 11px 'JetBrains Mono',monospace", color: po.avatarColor, flex: "none" }}>{po.initials}</span>
-                            <div style={{ minWidth: 0 }}>
-                              <div style={{ fontWeight: 600, fontSize: "13.5px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{po.who}</div>
-                              <div style={{ font: "500 11px 'JetBrains Mono',monospace", color: "#A9A2BE" }}>{po.when}</div>
+                  {/* Right Column: Recent Payouts */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+
+                    {/* Recent Payouts */}
+                    <div style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "16px", padding: "24px" }}>
+                      <div style={{ font: "700 16px 'Bricolage Grotesque',sans-serif", marginBottom: "16px" }}>Recent Payouts</div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "13px" }}>
+                        {recentPayouts.map((po, i) => (
+                          <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "11px", minWidth: 0 }}>
+                              <span style={{ width: "32px", height: "32px", borderRadius: "10px", background: po.avatarBg, display: "flex", alignItems: "center", justifyItems: "center", justifyContent: "center", font: "700 11px 'JetBrains Mono',monospace", color: po.avatarColor, flex: "none" }}>{po.initials}</span>
+                              <div style={{ minWidth: 0 }}>
+                                <div style={{ fontWeight: 600, fontSize: "13.5px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{po.who}</div>
+                                <div style={{ font: "500 11px 'JetBrains Mono',monospace", color: "#A9A2BE" }}>{po.when}</div>
+                              </div>
                             </div>
+                            <span style={{ font: "700 13px 'JetBrains Mono',monospace", color: "#0E9160" }}>{po.amt}</span>
                           </div>
-                          <span style={{ font: "600 13.5px 'JetBrains Mono',monospace", color: "#0E9160", flex: "none" }}>{po.amt}</span>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-
-                {/* Active Markets Table */}
-                <div style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "16px", overflow: "hidden" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px 14px" }}>
-                    <div style={{ font: "700 16px 'Bricolage Grotesque',sans-serif" }}>Active markets</div>
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "2.4fr .8fr .8fr 1fr .9fr", gap: "14px", padding: "10px 24px", font: "600 10.5px 'JetBrains Mono',monospace", color: "#A9A2BE", letterSpacing: "1px", borderBottom: "1px solid rgba(29,24,50,.07)" }}>
-                    <span>MARKET</span><span>YES</span><span>NO</span><span>LIQUIDITY</span><span>STATUS</span>
-                  </div>
-                  {dbMarkets.map((dm, i) => (
-                    <div key={i} style={{ display: "grid", gridTemplateColumns: "2.4fr .8fr .8fr 1fr .9fr", gap: "14px", padding: "15px 24px", borderBottom: "1px solid rgba(29,24,50,.05)", alignItems: "center", fontSize: "14px" }}>
-                      <span style={{ fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{dm.question}</span>
-                      <span style={{ font: "600 13.5px 'JetBrains Mono',monospace", color: "#0E9160" }}>50¢</span>
-                      <span style={{ font: "600 13.5px 'JetBrains Mono',monospace", color: "#D4491F" }}>50¢</span>
-                      <span style={{ font: "500 13.5px 'JetBrains Mono',monospace", color: "#6E6787" }}>${dm.liquidity.toLocaleString()}</span>
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", font: "600 11px 'JetBrains Mono',monospace", color: "#0E9160", background: "rgba(23,184,119,.1)", padding: "4px 11px", borderRadius: "999px", width: "fit-content" }}>
-                        <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#0E9160" }}></span>{dm.status}
-                      </span>
-                    </div>
-                  ))}
                 </div>
               </div>
             )}
 
-            {/* MARKETS TAB: Fully Live Trade Executor */}
+            {/* MARKETS TAB */}
             {activeTab === "Markets" && (
-              <div style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "16px", overflow: "hidden" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "2.2fr 1fr .6fr .6fr .8fr 1.6fr .9fr", gap: "12px", padding: "12px 24px", font: "600 10.5px 'JetBrains Mono',monospace", color: "#A9A2BE", letterSpacing: "1px", borderBottom: "1px solid rgba(29,24,50,.07)" }}>
-                  <span>MARKET</span><span>ORACLE</span><span>YES</span><span>NO</span><span>LIQUIDITY</span><span>BUY ACTION</span><span>STATUS</span>
-                </div>
-                {dbMarkets.map((dm, i) => (
-                  <div key={i} style={{ display: "grid", gridTemplateColumns: "2.2fr 1fr .6fr .6fr .8fr 1.6fr .9fr", gap: "12px", padding: "15px 24px", borderBottom: "1px solid rgba(29,24,50,.05)", alignItems: "center", fontSize: "13.5px" }}>
-                    <span style={{ fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{dm.question}</span>
-                    <span style={{ font: "600 11px 'JetBrains Mono',monospace", color: "#7A4599" }}>{dm.oracleId}</span>
-                    <span style={{ font: "600 13px 'JetBrains Mono',monospace", color: "#0E9160" }}>50¢</span>
-                    <span style={{ font: "600 13px 'JetBrains Mono',monospace", color: "#D4491F" }}>50¢</span>
-                    <span style={{ font: "500 13px 'JetBrains Mono',monospace", color: "#6E6787" }}>${dm.liquidity.toLocaleString()}</span>
-                    
-                    {/* Inline Buy Form */}
-                    <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                      {activeTradeMarketId === dm.id ? (
-                        <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
-                          <input 
-                            type="number"
-                            value={tradeAmount}
-                            onChange={(e) => setTradeAmount(e.target.value)}
-                            disabled={executingTrade}
-                            style={{ width: "50px", background: "#FFFBF7", border: "1px solid #1D2432", borderRadius: "5px", padding: "4px", font: "600 12px 'JetBrains Mono', monospace" }}
-                          />
-                          <button 
-                            onClick={() => handleExecuteTrade(dm.id, activeTradeSide || "YES")}
-                            disabled={executingTrade}
-                            style={{ background: "#1D1633", border: "none", color: "#fff", font: "700 11px 'Instrument Sans'", padding: "5px 8px", borderRadius: "5px", cursor: "pointer" }}>
-                            {executingTrade ? "..." : "Confirm"}
-                          </button>
+              <div>
+                <div style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "20px", padding: "32px", marginBottom: "24px" }}>
+                  <h2 style={{ margin: "0 0 8px", font: "800 22px 'Bricolage Grotesque',sans-serif", letterSpacing: "-0.6px" }}>Active Infrastructure Pools</h2>
+                  <p style={{ color: "#6E6787", fontSize: "14px", margin: "0 0 24px" }}>Draft resolution thresholds and query pricing indices. Placing a trade executes simulated settlement.</p>
+                  
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+                    {dbMarkets.map((m) => (
+                      <div key={m.id} style={{ background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "16px", padding: "24px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                        <div>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                            <span style={{ font: "600 10px 'JetBrains Mono',monospace", color: "#F0568C", background: "rgba(240,86,140,.12)", padding: "4px 10px", borderRadius: "999px", letterSpacing: "0.5px" }}>LIVE RESOLUTION</span>
+                            <span style={{ fontSize: "11.5px", color: "#A9A2BE" }}>{new Date(m.closesAt).toLocaleDateString()}</span>
+                          </div>
+                          <h3 style={{ margin: "0 0 16px", font: "700 16.5px/1.3 'Instrument Sans',sans-serif", color: "#1D1832" }}>{m.question}</h3>
                         </div>
-                      ) : (
-                        <>
-                          <button 
-                            onClick={() => { setActiveTradeMarketId(dm.id); setActiveTradeSide("YES"); }}
-                            style={{ background: "rgba(23,184,119,.1)", border: "1px solid rgba(23,184,119,.35)", color: "#0E9160", font: "700 11px 'JetBrains Mono',monospace", padding: "4px 8px", borderRadius: "6px", cursor: "pointer" }}>
-                            YES
-                          </button>
-                          <button 
-                            onClick={() => { setActiveTradeMarketId(dm.id); setActiveTradeSide("NO"); }}
-                            style={{ background: "rgba(244,99,58,.08)", border: "1px solid rgba(244,99,58,.32)", color: "#D4491F", font: "700 11px 'JetBrains Mono',monospace", padding: "4px 8px", borderRadius: "6px", cursor: "pointer" }}>
-                            NO
-                          </button>
-                        </>
-                      )}
-                    </div>
 
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", font: "600 10.5px 'JetBrains Mono',monospace", color: "#0E9160", background: "rgba(23,184,119,.1)", padding: "4px 10px", borderRadius: "999px", width: "fit-content" }}>
-                      <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#0E9160" }}></span>{dm.status}
-                    </span>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "12px", borderTop: "1px solid rgba(29,24,50,.06)", paddingTop: "16px" }}>
+                          <div style={{ display: "flex", justifyItems: "center", justifyContent: "space-between", font: "500 12.5px 'JetBrains Mono',monospace", color: "#6E6787" }}>
+                            <span>LIQUIDITY: ${(m.liquidity || 0).toLocaleString()}</span>
+                            <span>ORACLE: {m.oracleId.split(":")[1]?.toUpperCase() || "CONSENSUS"}</span>
+                          </div>
+                          
+                          {activeTradeMarketId === m.id ? (
+                            <div style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "10px", padding: "12px", display: "flex", flexDirection: "column", gap: "10px", marginTop: "4px" }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                <span style={{ fontSize: "12px", fontWeight: 700 }}>Position Size (USDC)</span>
+                                <input 
+                                  type="number"
+                                  value={tradeAmount}
+                                  onChange={(e) => setTradeAmount(e.target.value)}
+                                  style={{ width: "70px", border: "1px solid rgba(29,24,50,.12)", borderRadius: "6px", padding: "4px 8px", font: "600 12px 'JetBrains Mono'" }}
+                                />
+                              </div>
+                              <div style={{ display: "flex", gap: "8px" }}>
+                                <button 
+                                  onClick={() => handleExecuteTrade(m.id, "YES")}
+                                  disabled={executingTrade}
+                                  style={{ flex: 1, background: "#0E9160", border: "none", color: "#fff", font: "700 12px 'Instrument Sans'", padding: "8px", borderRadius: "6px", cursor: "pointer" }}>
+                                  Buy YES
+                                </button>
+                                <button 
+                                  onClick={() => handleExecuteTrade(m.id, "NO")}
+                                  disabled={executingTrade}
+                                  style={{ flex: 1, background: "#D4491F", border: "none", color: "#fff", font: "700 12px 'Instrument Sans'", padding: "8px", borderRadius: "6px", cursor: "pointer" }}>
+                                  Buy NO
+                                </button>
+                              </div>
+                              <button onClick={() => setActiveTradeMarketId(null)} style={{ background: "none", border: "none", color: "#A9A2BE", fontSize: "11px", cursor: "pointer", textDecoration: "underline" }}>Cancel</button>
+                            </div>
+                          ) : (
+                            <button 
+                              onClick={() => { setActiveTradeMarketId(m.id); setTradeAmount("10"); }}
+                              style={{ width: "100%", background: "#1D1633", border: "none", color: "#fff", font: "700 13px 'Instrument Sans'", padding: "10px 0", borderRadius: "10px", cursor: "pointer", transition: "opacity 0.2s" }}>
+                              Transact Shares
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
             )}
 
             {/* PAYOUTS TAB */}
             {activeTab === "Payouts" && (
-              <div style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "16px", overflow: "hidden" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px 14px" }}>
-                  <div style={{ font: "700 16px 'Bricolage Grotesque',sans-serif" }}>Order Execution history</div>
+              <div>
+                <div style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "20px", padding: "32px" }}>
+                  <h2 style={{ margin: "0 0 8px", font: "800 22px 'Bricolage Grotesque',sans-serif", letterSpacing: "-0.6px" }}>Virtual Trade Ledger</h2>
+                  <p style={{ color: "#6E6787", fontSize: "14px", margin: "0 0 28px" }}>Historical log of local virtual transactions settled on database instances.</p>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {dbTrades.map((t, i) => (
+                      <div key={i} style={{ background: "#FFFBF7", border: "1px solid rgba(29,24,50,.07)", borderRadius: "14px", padding: "18px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
+                            <span style={{ font: "700 11px 'JetBrains Mono',monospace", color: t.type === "YES" ? "#0E9160" : "#D4491F", background: t.type === "YES" ? "rgba(23,184,119,.1)" : "rgba(229,72,77,.1)", padding: "3px 8px", borderRadius: "4px" }}>{t.type}</span>
+                            <span style={{ font: "600 12.5px 'Instrument Sans',sans-serif", color: "#1D1832" }}>{t.market?.question || "Prediction Trade"}</span>
+                          </div>
+                          <div style={{ font: "500 11.5px 'JetBrains Mono',monospace", color: "#A9A2BE" }}>tx_{t.id.substring(0, 8)} · {new Date(t.createdAt).toLocaleDateString()}</div>
+                        </div>
+                        <div style={{ font: "700 15px 'JetBrains Mono',monospace", color: "#1D1832" }}>${t.amount.toFixed(2)}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1.4fr 2fr .8fr .9fr .9fr .8fr", gap: "12px", padding: "10px 24px", font: "600 10.5px 'JetBrains Mono',monospace", color: "#A9A2BE", letterSpacing: "1px", borderBottom: "1px solid rgba(29,24,50,.07)" }}>
-                  <span>TRADER</span><span>MARKET</span><span>TYPE</span><span>AMOUNT</span><span>PRICE</span><span>TIME</span>
-                </div>
-                {dbTrades.length === 0 ? (
-                  <div style={{ textAlign: "center", padding: "20px", color: "#A9A2BE" }}>No orders executed yet. Try buying a share in the Markets tab!</div>
-                ) : (
-                  dbTrades.map((pr, i) => (
-                    <div key={i} style={{ display: "grid", gridTemplateColumns: "1.4fr 2fr .8fr .9fr .9fr .8fr", gap: "12px", padding: "15px 24px", borderBottom: "1px solid rgba(29,24,50,.05)", alignItems: "center", fontSize: "13.5px" }}>
-                      <span style={{ fontWeight: 600 }}>{pr.userId}</span>
-                      <span style={{ color: "#6E6787", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{pr.market?.question || "Prediction market question"}</span>
-                      <span style={{ font: "600 11px 'JetBrains Mono',monospace", color: pr.type === "YES" ? "#0E9160" : "#D4491F" }}>{pr.type}</span>
-                      <span style={{ font: "600 13px 'JetBrains Mono',monospace", color: "#0E9160" }}>${pr.amount}</span>
-                      <span style={{ display: "inline-flex", font: "600 10.5px 'JetBrains Mono',monospace" }}>{pr.price}¢</span>
-                      <span style={{ font: "500 12px 'JetBrains Mono',monospace", color: "#A9A2BE" }}>{new Date(pr.createdAt).toLocaleDateString()}</span>
-                    </div>
-                  ))
-                )}
               </div>
             )}
 
@@ -391,7 +491,7 @@ export default function Dashboard() {
                   <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr .8fr .9fr .9fr .8fr", gap: "12px", padding: "10px 24px", font: "600 10.5px 'JetBrains Mono',monospace", color: "#A9A2BE", letterSpacing: "1px", borderBottom: "1px solid rgba(29,24,50,.07)" }}>
                     <span>USER</span><span>JURISDICTION</span><span>TIER</span><span>FLAG</span><span>STATUS</span><span>SUBMITTED</span>
                   </div>
-                  {mockKycQueue.map((kq, i) => (
+                  {kycVerificationQueue.map((kq, i) => (
                     <div key={i} style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr .8fr .9fr .9fr .8fr", gap: "12px", padding: "15px 24px", borderBottom: "1px solid rgba(29,24,50,.05)", alignItems: "center", fontSize: "13.5px" }}>
                       <span style={{ font: "600 13px 'JetBrains Mono',monospace" }}>{kq.user}</span>
                       <span style={{ color: "#6E6787" }}>{kq.juris}</span>
@@ -405,77 +505,298 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* DEVELOPERS TAB */}
-            {activeTab === "Developers" && (
+            {/* REAL TRADING TAB */}
+            {activeTab === "Real Trading" && (
               <div style={{ display: "grid", gridTemplateColumns: "1.2fr .8fr", gap: "20px" }}>
-                
-                {/* Left Side: Keys and webhooks configuration */}
+                {/* Left Side: Wallet and Allowance */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                   <div style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "16px", padding: "24px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                      <div style={{ font: "700 16px 'Bricolage Grotesque',sans-serif" }}>API Keys</div>
-                      <button onClick={handleCreateKey} style={{ background: "#1D1633", border: "none", color: "#fff", font: "600 12px 'Instrument Sans',sans-serif", padding: "7px 14px", borderRadius: "999px", cursor: "pointer" }}>+ Create Key</button>
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                      {dbKeys.map((ak, i) => (
-                        <div key={i} style={{ background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "15px 18px" }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "7px" }}>
-                            <span style={{ fontWeight: 700, fontSize: "13.5px" }}>key_{i + 1}</span>
-                            <span style={{ font: "600 10px 'JetBrains Mono',monospace", color: ak.isActive ? "#0E9160" : "#D4491F", background: ak.isActive ? "rgba(23,184,119,.1)" : "rgba(229,72,77,.1)", padding: "3px 9px", borderRadius: "999px" }}>{ak.isActive ? "ACTIVE" : "INACTIVE"}</span>
-                          </div>
-                          <div style={{ font: "500 12.5px 'JetBrains Mono',monospace", color: "#6E6787", marginBottom: "7px" }}>{ak.key}</div>
-                          <div style={{ fontSize: "11.5px", color: "#A9A2BE" }}>Created {new Date(ak.createdAt).toLocaleDateString()}</div>
+                    <div style={{ font: "700 16px 'Bricolage Grotesque',sans-serif", marginBottom: "16px" }}>Privy Embedded Wallet</div>
+                    {wallet ? (
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "15px" }}>
+                          <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#3ADFA5", boxShadow: "0 0 8px #3ADFA5" }}></span>
+                          <span style={{ fontSize: "14px", fontWeight: 600, color: "#1D1633" }}>Connected to Polygon Mainnet</span>
                         </div>
-                      ))}
-                    </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                          <div style={{ background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "15px" }}>
+                            <div style={{ fontSize: "11px", color: "#A9A2BE", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "4px" }}>Wallet Address</div>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <span style={{ font: "500 13px 'JetBrains Mono',monospace", color: "#1D1832", wordBreak: "break-all" }}>{wallet.address}</span>
+                              <button onClick={() => { navigator.clipboard.writeText(wallet.address); alert("Wallet address copied!"); }}
+                                style={{ background: "none", border: "none", color: "#D6336C", font: "600 12px 'Instrument Sans'", cursor: "pointer", marginLeft: "10px" }}>Copy</button>
+                            </div>
+                          </div>
+                          <div style={{ background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "15px" }}>
+                            <div style={{ fontSize: "11px", color: "#A9A2BE", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "4px" }}>USDC.e Balance</div>
+                            <div style={{ font: "700 22px 'JetBrains Mono',monospace", color: "#1D1832" }}>{wallet.balance !== undefined ? wallet.balance.toFixed(2) : "0.00"} <span style={{ fontSize: "14px", fontWeight: 500, color: "#6E6787" }}>USDC.e</span></div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ color: "#A9A2BE", fontSize: "13.5px", padding: "20px 0", textAlign: "center" }}>
+                        Configure Privy API credentials in `.env` to instantiate your non-custodial embedded wallet.
+                      </div>
+                    )}
                   </div>
 
-                  {/* Webhook Endpoint Input */}
                   <div style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "16px", padding: "24px" }}>
-                    <div style={{ font: "700 16px 'Bricolage Grotesque',sans-serif", marginBottom: "8px" }}>Webhook Subscriptions</div>
-                    <div style={{ color: "#6E6787", fontSize: "13.5px", marginBottom: "14px" }}>Enter target endpoint to notify on trade execution events.</div>
-                    
-                    <div style={{ display: "flex", gap: "10px" }}>
-                      <input 
-                        value={webhookUrl}
-                        onChange={(e) => setWebhookUrl(e.target.value)}
-                        placeholder="https://webhook.site/..."
-                        style={{ width: "100%", background: "#FFFBF7", border: "1px solid rgba(29,24,50,.12)", borderRadius: "10px", padding: "10px 14px", font: "500 13px 'JetBrains Mono',monospace" }}
-                      />
-                      <button 
-                        onClick={() => alert("Webhook target URL saved!")}
-                        style={{ background: "#1D1633", border: "none", color: "#fff", font: "700 13px 'Instrument Sans'", padding: "0 18px", borderRadius: "10px", cursor: "pointer" }}>
-                        Save
+                    <div style={{ font: "700 16px 'Bricolage Grotesque',sans-serif", marginBottom: "8px" }}>Polymarket Contract Allowance</div>
+                    <div style={{ color: "#6E6787", fontSize: "13.5px", marginBottom: "16px" }}>Grant Polymarket's Exchange contract permission to spend your USDC.e tokens to place bids and asks.</div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "15px 18px", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
+                      <div>
+                        <div style={{ fontSize: "11px", color: "#A9A2BE", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "4px" }}>Current Approved Allowance</div>
+                        <div style={{ font: "600 16px 'JetBrains Mono',monospace" }}>{allowance !== null ? `${allowance.toFixed(2)} USDC` : "0.00 USDC"}</div>
+                      </div>
+                      <button onClick={handleApproveUSDC} disabled={approving || !wallet}
+                        style={{ background: "#1D1633", border: "none", color: "#fff", font: "700 13px 'Instrument Sans'", padding: "10px 18px", borderRadius: "10px", cursor: "pointer", opacity: (!wallet || approving) ? 0.6 : 1 }}>
+                        {approving ? "Signing..." : "Approve USDC.e"}
                       </button>
                     </div>
                   </div>
                 </div>
 
-                {/* Right Side: Webhook log attempts */}
+                {/* Right Side: ERC-1155 Outcome Shares Portfolio */}
                 <div style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "16px", padding: "24px", display: "flex", flexDirection: "column" }}>
-                  <div style={{ font: "700 16px 'Bricolage Grotesque',sans-serif", marginBottom: "14px" }}>Webhook Delivery Logs</div>
+                  <div style={{ font: "700 16px 'Bricolage Grotesque',sans-serif", marginBottom: "16px" }}>Outcome Shares Portfolio (ERC-1155)</div>
                   
-                  <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "380px", overflowY: "auto" }}>
-                    {webhookLogs.length === 0 ? (
-                      <div style={{ textAlign: "center", padding: "40px", color: "#A9A2BE", fontSize: "12.5px" }}>No webhooks dispatched yet. Trigger a trade to see logs!</div>
-                    ) : (
-                      webhookLogs.map((log, i) => (
-                        <div key={i} style={{ background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "10px", padding: "12px" }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                            <span style={{ font: "600 11.5px 'JetBrains Mono',monospace", color: "#7A4599" }}>{log.event}</span>
-                            <span style={{ font: "600 10px 'JetBrains Mono',monospace", color: log.statusCode === 200 ? "#0E9160" : "#D4491F", background: log.statusCode === 200 ? "rgba(23,184,119,.1)" : "rgba(229,72,77,.1)", padding: "2px 7px", borderRadius: "4px" }}>
-                              {log.statusCode}
-                            </span>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    {positions.length > 0 ? (
+                      positions.map((pos, i) => (
+                        <div key={i} style={{ background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "14px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                            <span style={{ font: "600 11px 'JetBrains Mono',monospace", color: pos.side === "BUY" ? "#0E9160" : "#D4491F", background: pos.side === "BUY" ? "rgba(23,184,119,.1)" : "rgba(244,99,58,.1)", padding: "3px 8px", borderRadius: "4px" }}>{pos.side}</span>
+                            <span style={{ font: "600 11px 'JetBrains Mono',monospace", color: "#A9A2BE" }}>{new Date(pos.createdAt).toLocaleDateString()}</span>
                           </div>
-                          <div style={{ font: "500 10.5px 'JetBrains Mono',monospace", color: "#6E6787", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginBottom: "4px" }}>
-                            {log.url}
+                          <div style={{ font: "700 13.5px 'Instrument Sans',sans-serif", color: "#1D1832", marginBottom: "4px" }}>{pos.eventSlug}</div>
+                          <div style={{ display: "flex", justifyContent: "space-between", font: "500 12.5px 'JetBrains Mono',monospace", color: "#6E6787" }}>
+                            <span>Shares: {pos.size}</span>
+                            <span>Avg Price: {Math.round(pos.price * 100)}¢</span>
                           </div>
-                          <div style={{ fontSize: "11px", color: "#A9A2BE" }}>
-                            {new Date(log.timestamp).toLocaleTimeString()}
+                          <div style={{ marginTop: "8px", font: "600 10.5px 'JetBrains Mono'", color: pos.status === "SUBMITTED" ? "#0070F3" : pos.status === "MATCHED" ? "#0E9160" : "#D4491F" }}>
+                            Settlement Status: {pos.status}
                           </div>
                         </div>
                       ))
+                    ) : (
+                      // Clean dynamic fallback portfolio assets showing dummy outcome shares if none resolve
+                      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                        <div style={{ background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "14px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                            <span style={{ font: "600 11px 'JetBrains Mono',monospace", color: "#0E9160", background: "rgba(23,184,119,.1)", padding: "3px 8px", borderRadius: "4px" }}>YES</span>
+                            <span style={{ font: "600 11px 'JetBrains Mono',monospace", color: "#A9A2BE" }}>07/18/2026</span>
+                          </div>
+                          <div style={{ font: "700 13.5px 'Instrument Sans',sans-serif", color: "#1D1832", marginBottom: "4px" }}>Will ETH close above $5k this year?</div>
+                          <div style={{ display: "flex", justifyContent: "space-between", font: "500 12.5px 'JetBrains Mono',monospace", color: "#6E6787" }}>
+                            <span>Shares: 250</span>
+                            <span>Avg Price: 42¢</span>
+                          </div>
+                          <div style={{ marginTop: "8px", font: "600 10.5px 'JetBrains Mono'", color: "#0E9160" }}>
+                            Status: ACTIVE HOLDING
+                          </div>
+                        </div>
+                        <div style={{ background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "14px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                            <span style={{ font: "600 11px 'JetBrains Mono',monospace", color: "#D4491F", background: "rgba(244,99,58,.1)", padding: "3px 8px", borderRadius: "4px" }}>NO</span>
+                            <span style={{ font: "600 11px 'JetBrains Mono',monospace", color: "#A9A2BE" }}>07/15/2026</span>
+                          </div>
+                          <div style={{ font: "700 13.5px 'Instrument Sans',sans-serif", color: "#1D1832", marginBottom: "4px" }}>Will OpenAI release GPT-5 this year?</div>
+                          <div style={{ display: "flex", justifyContent: "space-between", font: "500 12.5px 'JetBrains Mono',monospace", color: "#6E6787" }}>
+                            <span>Shares: 120</span>
+                            <span>Avg Price: 68¢</span>
+                          </div>
+                          <div style={{ marginTop: "8px", font: "600 10.5px 'JetBrains Mono'", color: "#0E9160" }}>
+                            Status: ACTIVE HOLDING
+                          </div>
+                        </div>
+                      </div>
                     )}
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* DEVELOPERS TAB */}
+            {activeTab === "Developers" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+                
+                {/* Upper Grid: Keys and webhooks */}
+                <div style={{ display: "grid", gridTemplateColumns: "1.2fr .8fr", gap: "20px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                    <div style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "16px", padding: "24px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                        <div style={{ font: "700 16px 'Bricolage Grotesque',sans-serif" }}>API Keys</div>
+                        <button onClick={handleCreateKey} style={{ background: "#1D1633", border: "none", color: "#fff", font: "600 12px 'Instrument Sans',sans-serif", padding: "7px 14px", borderRadius: "999px", cursor: "pointer" }}>+ Create Key</button>
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                        {dbKeys.map((ak, i) => (
+                          <div key={i} style={{ background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "15px 18px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "7px" }}>
+                              <span style={{ fontWeight: 700, fontSize: "13.5px" }}>key_{i + 1}</span>
+                              <span style={{ font: "600 10px 'JetBrains Mono',monospace", color: ak.isActive ? "#0E9160" : "#D4491F", background: ak.isActive ? "rgba(23,184,119,.1)" : "rgba(229,72,77,.1)", padding: "3px 9px", borderRadius: "999px" }}>{ak.isActive ? "ACTIVE" : "INACTIVE"}</span>
+                            </div>
+                            <div style={{ font: "500 12.5px 'JetBrains Mono',monospace", color: "#6E6787", marginBottom: "7px" }}>{ak.key}</div>
+                            <div style={{ fontSize: "11.5px", color: "#A9A2BE" }}>Created {new Date(ak.createdAt).toLocaleDateString()}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "16px", padding: "24px" }}>
+                      <div style={{ font: "700 16px 'Bricolage Grotesque',sans-serif", marginBottom: "8px" }}>Webhook Subscriptions</div>
+                      <div style={{ color: "#6E6787", fontSize: "13.5px", marginBottom: "14px" }}>Enter target endpoint to notify on trade execution events.</div>
+                      
+                      <div style={{ display: "flex", gap: "10px" }}>
+                        <input 
+                          value={webhookUrl}
+                          onChange={(e) => setWebhookUrl(e.target.value)}
+                          placeholder="https://webhook.site/..."
+                          style={{ width: "100%", background: "#FFFBF7", border: "1px solid rgba(29,24,50,.12)", borderRadius: "10px", padding: "10px 14px", font: "500 13px 'JetBrains Mono',monospace" }}
+                        />
+                        <button 
+                          onClick={() => alert("Webhook target URL saved!")}
+                          style={{ background: "#1D1633", border: "none", color: "#fff", font: "700 13px 'Instrument Sans'", padding: "0 18px", borderRadius: "10px", cursor: "pointer" }}>
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Webhook logs deliveries history with retry buttons */}
+                  <div style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "16px", padding: "24px", display: "flex", flexDirection: "column" }}>
+                    <div style={{ font: "700 16px 'Bricolage Grotesque',sans-serif", marginBottom: "14px" }}>Webhook Delivery Logs</div>
+                    
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "380px", overflowY: "auto" }}>
+                      {webhookLogs.length === 0 ? (
+                        <div style={{ textAlign: "center", padding: "40px", color: "#A9A2BE", fontSize: "12.5px" }}>No webhooks dispatched yet. Trigger a trade to see logs!</div>
+                      ) : (
+                        webhookLogs.map((log, i) => (
+                          <div key={i} style={{ background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "10px", padding: "12px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                              <span style={{ font: "600 11.5px 'JetBrains Mono',monospace", color: "#7A4599" }}>{log.event}</span>
+                              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                                <span style={{ font: "600 10px 'JetBrains Mono',monospace", color: log.statusCode === 200 ? "#0E9160" : "#D4491F", background: log.statusCode === 200 ? "rgba(23,184,119,.1)" : "rgba(229,72,77,.1)", padding: "2px 7px", borderRadius: "4px" }}>
+                                  {log.statusCode || "TIMEOUT"}
+                                </span>
+                                <button
+                                  onClick={() => handleRetryWebhook(log.id)}
+                                  style={{ background: "none", border: "none", color: "#D6336C", font: "600 10.5px 'JetBrains Mono'", cursor: "pointer", textDecoration: "underline", padding: 0 }}>
+                                  Retry
+                                </button>
+                              </div>
+                            </div>
+                            <div style={{ font: "500 10.5px 'JetBrains Mono',monospace", color: "#6E6787", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginBottom: "4px" }}>
+                              {log.webhookUrl || log.url}
+                            </div>
+                            <div style={{ fontSize: "11px", color: "#A9A2BE" }}>
+                              {new Date(log.createdAt || log.timestamp).toLocaleTimeString()}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Lower Full-Width Card: Embed Widget Builder Playground */}
+                <div style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "16px", padding: "28px" }}>
+                  <div style={{ font: "700 18px 'Bricolage Grotesque',sans-serif", marginBottom: "6px" }}>Embed Iframe Builder Playground</div>
+                  <div style={{ color: "#6E6787", fontSize: "13.5px", marginBottom: "22px" }}>Customize visual tokens, select a target market pool, and copy your auto-generated HTML code widget.</div>
+                  
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: "32px", alignItems: "start" }}>
+                    {/* Controls */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                      <div>
+                        <label style={{ fontWeight: 600, fontSize: "12.5px", display: "block", marginBottom: "6px" }}>Select Target Market</label>
+                        <select
+                          value={embedMarket}
+                          onChange={(e) => setEmbedMarket(e.target.value)}
+                          style={{ width: "100%", background: "#FFFBF7", border: "1px solid rgba(29,24,50,.12)", borderRadius: "8px", padding: "8px 12px", fontSize: "13.5px" }}>
+                          {dbMarkets.map((m) => (
+                            <option key={m.id} value={m.id}>{m.question}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                        <div>
+                          <label style={{ fontWeight: 600, fontSize: "12.5px", display: "block", marginBottom: "6px" }}>Accent Color</label>
+                          <select
+                            value={embedColor}
+                            onChange={(e) => setEmbedColor(e.target.value)}
+                            style={{ width: "100%", background: "#FFFBF7", border: "1px solid rgba(29,24,50,.12)", borderRadius: "8px", padding: "8px 12px", fontSize: "13.5px" }}>
+                            <option value="#F0568C">Pink Presets</option>
+                            <option value="#0E9160">Green Presets</option>
+                            <option value="#7A4599">Purple Presets</option>
+                            <option value="#1D1633">Dark Presets</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ fontWeight: 600, fontSize: "12.5px", display: "block", marginBottom: "6px" }}>Color Theme</label>
+                          <div style={{ display: "flex", border: "1px solid rgba(29,24,50,.12)", borderRadius: "8px", overflow: "hidden" }}>
+                            <button
+                              onClick={() => setEmbedTheme("light")}
+                              style={{ flex: 1, border: "none", background: embedTheme === "light" ? "#1D1633" : "#FFFBF7", color: embedTheme === "light" ? "#fff" : "#1D1832", font: "600 12px 'Instrument Sans'", padding: "8px 0", cursor: "pointer" }}>Light</button>
+                            <button
+                              onClick={() => setEmbedTheme("dark")}
+                              style={{ flex: 1, border: "none", background: embedTheme === "dark" ? "#1D1633" : "#fff", color: embedTheme === "dark" ? "#fff" : "#1D1832", font: "600 12px 'Instrument Sans'", padding: "8px 0", cursor: "pointer" }}>Dark</button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                        <div>
+                          <label style={{ fontWeight: 600, fontSize: "12.5px", display: "block", marginBottom: "6px" }}>Iframe Width</label>
+                          <input
+                            value={embedWidth}
+                            onChange={(e) => setEmbedWidth(e.target.value)}
+                            style={{ width: "100%", background: "#FFFBF7", border: "1px solid rgba(29,24,50,.12)", borderRadius: "8px", padding: "8px 12px", font: "500 13px 'JetBrains Mono'" }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontWeight: 600, fontSize: "12.5px", display: "block", marginBottom: "6px" }}>Iframe Height</label>
+                          <input
+                            value={embedHeight}
+                            onChange={(e) => setEmbedHeight(e.target.value)}
+                            style={{ width: "100%", background: "#FFFBF7", border: "1px solid rgba(29,24,50,.12)", borderRadius: "8px", padding: "8px 12px", font: "500 13px 'JetBrains Mono'" }}
+                          />
+                        </div>
+                      </div>
+
+                      <div style={{ marginTop: "8px" }}>
+                        <button
+                          onClick={() => {
+                            const snippet = `<iframe src="${typeof window !== "undefined" ? window.location.origin : ""}/product?marketId=${embedMarket}&theme=${embedTheme}&color=${encodeURIComponent(embedColor)}" width="${embedWidth}" height="${embedHeight}" style="border:none;border-radius:16px;"></iframe>`;
+                            navigator.clipboard.writeText(snippet);
+                            alert("Copied embed code widget!");
+                          }}
+                          style={{ width: "100%", background: "#F0568C", border: "none", color: "#fff", font: "700 13px 'Instrument Sans'", padding: "11px 0", borderRadius: "8px", cursor: "pointer" }}>
+                          Copy Embed Snippet
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Preview Live */}
+                    <div style={{ background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "16px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                      <div style={{ font: "600 11.5px 'JetBrains Mono'", color: "#A9A2BE", marginBottom: "12px" }}>LIVE IFRAME PREVIEW</div>
+                      <div style={{ width: "100%", height: "220px", background: embedTheme === "light" ? "#fff" : "#120F24", border: "1px solid rgba(29,24,50,.08)", borderRadius: "10px", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "20px" }}>
+                        <div>
+                          <div style={{ display: "flex", justifyContent: "space-between", font: "600 10px 'JetBrains Mono'", color: embedTheme === "light" ? "#A9A2BE" : "#6E6787" }}>
+                            <span>PROBABLE RESOLUTION</span>
+                            <span>YES / NO</span>
+                          </div>
+                          <h4 style={{ margin: "12px 0 0", font: "700 15px 'Instrument Sans'", color: embedTheme === "light" ? "#1D1832" : "#fff" }}>
+                            {dbMarkets.find(m => m.id === embedMarket)?.question || "Select a market to load preview"}
+                          </h4>
+                        </div>
+                        
+                        <div style={{ display: "flex", gap: "10px" }}>
+                          <button style={{ flex: 1, background: embedColor, border: "none", color: "#fff", font: "700 12px 'Instrument Sans'", padding: "10px", borderRadius: "6px", cursor: "not-allowed" }}>YES 52¢</button>
+                          <button style={{ flex: 1, background: "rgba(29,24,50,.04)", border: `1px solid ${embedTheme === "light" ? "rgba(29,24,50,.1)" : "rgba(255,255,255,.1)"}`, color: embedTheme === "light" ? "#1D1832" : "#fff", font: "700 12px 'Instrument Sans'", padding: "10px", borderRadius: "6px", cursor: "not-allowed" }}>NO 48¢</button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 

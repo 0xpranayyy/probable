@@ -8,17 +8,41 @@ generator client {
 }
 
 model User {
-  id            String          @id @default(uuid())
-  email         String          @unique
-  password      String // scrypt hash: salt:hex
-  name          String?
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  ApiKeys       ApiKey[]
-  Sessions      Session[]
-  Markets       Market[]
-  Orders        Order[]
-  WatchlistItem WatchlistItem[]
+  id                String          @id @default(uuid())
+  email             String          @unique
+  password          String // scrypt hash: salt:hex
+  name              String?
+  walletAddress     String?         @unique // Polygon address of the user's Privy embedded wallet
+  privyWalletId     String?         @unique // Privy's internal wallet ID, needed to request signatures
+  clobApiKey        String? // Derived Polymarket CLOB API credentials (L2 auth). These
+  clobApiSecret     String? // cannot move funds on their own — every order still needs a
+  clobApiPassphrase String? // fresh EIP-712 signature from the real wallet via Privy.
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  ApiKeys           ApiKey[]
+  Sessions          Session[]
+  Markets           Market[]
+  Orders            Order[]
+  WatchlistItem     WatchlistItem[]
+  RealPositions     RealPosition[]
+  WebhookDeliveries WebhookDelivery[]
+}
+
+// A real order placed against Polymarket's actual CLOB (mainnet). Separate
+// from Order (the toy-exchange model above) on purpose — this tracks real
+// money against real Polymarket markets.
+model RealPosition {
+  id                String   @id @default(uuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id])
+  polymarketOrderId String // Order ID returned by Polymarket's CLOB
+  tokenId           String // Polymarket CLOB token ID (the specific outcome)
+  eventSlug         String
+  side              String // BUY or SELL
+  price             Float
+  size              Float
+  status            String   @default("SUBMITTED") // SUBMITTED, MATCHED, REJECTED, CANCELED
+  createdAt         DateTime @default(now())
 }
 
 model Session {
@@ -81,4 +105,17 @@ model WatchlistItem {
   createdAt  DateTime @default(now())
 
   @@unique([userId, eventId])
+}
+
+model WebhookDelivery {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  webhookUrl String
+  event      String   // e.g. trade.executed
+  payload    String   // JSON stringified payload
+  statusCode Int?     // HTTP response status (e.g. 200, 500)
+  status     String   // SUCCESS, FAILED
+  error      String?  // Error message if failed
+  createdAt  DateTime @default(now())
 }

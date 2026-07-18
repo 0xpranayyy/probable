@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ProbableClient, WatchlistItem } from "@probable/sdk";
+import { WatchlistItem } from "@probable/sdk";
+import { getAuthedSdk } from "./sdk";
 import {
   getLocalWatchlist, isLocalWatched, toggleLocalWatch, setLocalAlert, onLocalWatchlistChange,
 } from "./localWatchlist";
@@ -32,7 +33,7 @@ export function useWatchlist() {
     setToken(cached ? JSON.parse(cached).token : null);
   }, []);
 
-  const sdk = token ? new ProbableClient({ token, baseUrl: "http://localhost:3001" }) : null;
+  const sdk = token ? getAuthedSdk() : null;
 
   const refresh = useCallback(async () => {
     if (sdk) {

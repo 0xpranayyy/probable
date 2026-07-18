@@ -12,7 +12,8 @@
     "next": "16.2.10",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "@probable/sdk": "*"
+    "@probable/sdk": "*",
+    "@privy-io/react-auth": "^1.95.0"
   },
   "devDependencies": {
     "@types/node": "^20",
