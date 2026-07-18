@@ -7,6 +7,26 @@ import Footer from "../../components/Footer";
 import { getAuthedSdk } from "../../lib/sdk";
 import { API_BASE_URL } from "../../lib/config";
 
+const Kbd = ({ children }: { children: React.ReactNode }) => (
+  <kbd style={{
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: "rgba(29, 24, 50, 0.05)",
+    border: "1px solid rgba(29, 24, 50, 0.12)",
+    borderRadius: "6px",
+    padding: "2px 5px",
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize: "10px",
+    fontWeight: 600,
+    color: "#6E6787",
+    boxShadow: "0 1px 0px rgba(0,0,0,0.1)",
+    verticalAlign: "middle"
+  }}>
+    {children}
+  </kbd>
+);
+
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("Overview");
   const [dbMarkets, setDbMarkets] = useState<any[]>([]);
@@ -53,6 +73,56 @@ export default function Dashboard() {
   // 2. AI Assistant State
   const [aiPrompt, setAiPrompt] = useState("");
   const [drafting, setDrafting] = useState(false);
+
+  // 3. Search State
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Keyboard Shortcuts Hook
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Escape closes modals
+      if (e.key === "Escape") {
+        setIsModalOpen(false);
+        setActiveTradeMarketId(null);
+        setActiveTradeSide(null);
+        return;
+      }
+
+      // Check if command/meta or ctrl is pressed
+      const hasModifier = e.metaKey || e.ctrlKey;
+
+      if (hasModifier) {
+        // Search shortcut: CMD + K or CMD + /
+        if (e.key === "k" || e.key === "/") {
+          e.preventDefault();
+          const searchInput = document.getElementById("market-search-input");
+          if (searchInput) {
+            setActiveTab("Markets");
+            setTimeout(() => searchInput.focus(), 50);
+          } else {
+            const aiInput = document.getElementById("ai-prompt-input");
+            if (aiInput) aiInput.focus();
+          }
+          return;
+        }
+
+        // Tabs switching: CMD + 1 to CMD + 6
+        const keyVal = parseInt(e.key);
+        if (!isNaN(keyVal) && keyVal >= 1 && keyVal <= 6) {
+          e.preventDefault();
+          const tabNames = ["Overview", "Markets", "Payouts", "Compliance", "Real Trading", "Developers"];
+          const targetTab = tabNames[keyVal - 1];
+          if (targetTab) {
+            setActiveTab(targetTab);
+          }
+          return;
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
 
 
@@ -288,22 +358,36 @@ export default function Dashboard() {
           <div style={{ padding: "120px 0", textAlign: "center", color: "#A9A2BE", font: "600 14px 'JetBrains Mono'" }}>Loading credentials & analytics...</div>
         ) : (
           <>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "32px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "32px", gap: "16px", flexWrap: "wrap" }}>
               <div>
                 <h1 style={{ margin: "0 0 6px", font: "800 36px 'Bricolage Grotesque',sans-serif", letterSpacing: "-1.4px" }}>Developer Dashboard</h1>
                 <div style={{ color: "#6E6787", fontSize: "14.5px" }}>Welcome back, <span style={{ fontWeight: 600, color: "#1D1832" }}>{user?.name || user?.email}</span></div>
               </div>
-              <button onClick={() => setIsModalOpen(true)} style={{ background: "#F0568C", border: "none", color: "#fff", font: "700 13.5px 'Instrument Sans'", padding: "11px 22px", borderRadius: "10px", cursor: "pointer", transition: "opacity 0.2s" }}>+ Deploy New Market</button>
+              <button onClick={() => setIsModalOpen(true)} style={{ background: "#F0568C", border: "none", color: "#fff", font: "700 13.5px 'Instrument Sans'", padding: "11px 24px", borderRadius: "9999px", cursor: "pointer", transition: "transform 0.15s, opacity 0.15s", boxShadow: "0 4px 14px rgba(240, 86, 140, 0.4)" }} onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.02)"} onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}>+ Deploy New Market</button>
             </div>
 
             {/* TAB SELECTOR */}
-            <div style={{ display: "flex", gap: "28px", borderBottom: "1.5px solid rgba(29,24,50,.07)", marginBottom: "32px", overflowX: "auto" }}>
-              {tabs.map((tab) => (
+            <div style={{ display: "flex", gap: "8px", background: "rgba(29, 24, 50, 0.03)", padding: "6px", borderRadius: "9999px", marginBottom: "32px", overflowX: "auto", border: "1px solid rgba(29, 24, 50, 0.06)", width: "fit-content" }}>
+              {tabs.map((tab, idx) => (
                 <button 
                   key={tab} 
                   onClick={() => setActiveTab(tab)}
-                  style={{ background: "none", border: "none", borderBottom: activeTab === tab ? "2.5px solid #F0568C" : "2.5px solid transparent", color: activeTab === tab ? "#1D1832" : "#A9A2BE", font: "600 14px 'Instrument Sans',sans-serif", padding: "10px 16px", cursor: "pointer", marginBottom: "-1px" }}>
+                  style={{ 
+                    background: activeTab === tab ? "#fff" : "transparent", 
+                    border: "none", 
+                    color: activeTab === tab ? "#1D1832" : "#6E6787", 
+                    font: "700 13.5px 'Instrument Sans',sans-serif", 
+                    padding: "8px 18px", 
+                    borderRadius: "9999px", 
+                    cursor: "pointer",
+                    boxShadow: activeTab === tab ? "0 2px 8px rgba(0,0,0,0.06)" : "none",
+                    transition: "all 0.15s ease",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px"
+                  }}>
                   {tab}
+                  <span style={{ opacity: activeTab === tab ? 0.7 : 0.4 }}><Kbd>⌘{idx + 1}</Kbd></span>
                 </button>
               ))}
             </div>
@@ -332,15 +416,16 @@ export default function Dashboard() {
                       <div style={{ color: "#6E6787", fontSize: "13.5px", marginBottom: "16px" }}>Draft compliant, resolving prediction markets in seconds using generative forecasting intelligence.</div>
                       <div style={{ display: "flex", gap: "10px" }}>
                         <input
+                          id="ai-prompt-input"
                           value={aiPrompt}
                           onChange={(e) => setAiPrompt(e.target.value)}
                           placeholder="e.g. Will Apple release a folding phone in Q3 2026?"
-                          style={{ flex: 1, background: "#FFFBF7", border: "1px solid rgba(29,24,50,.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "13.5px" }}
+                          style={{ flex: 1, background: "#FFFBF7", border: "1px solid rgba(29,24,50,.12)", borderRadius: "9999px", padding: "12px 20px", fontSize: "13.5px", outline: "none" }}
                         />
                         <button
                           onClick={handleGenerateDraft}
                           disabled={drafting || !aiPrompt.trim()}
-                          style={{ background: "#1D1633", border: "none", color: "#fff", font: "700 13px 'Instrument Sans'", padding: "0 20px", borderRadius: "10px", cursor: "pointer", opacity: drafting ? 0.6 : 1 }}>
+                          style={{ background: "#1D1633", border: "none", color: "#fff", font: "700 13.5px 'Instrument Sans'", padding: "0 24px", borderRadius: "9999px", cursor: "pointer", opacity: drafting ? 0.6 : 1 }}>
                           {drafting ? "Drafting..." : "Draft"}
                         </button>
                       </div>
@@ -396,11 +481,37 @@ export default function Dashboard() {
             {activeTab === "Markets" && (
               <div>
                 <div style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "20px", padding: "32px", marginBottom: "24px" }}>
-                  <h2 style={{ margin: "0 0 8px", font: "800 22px 'Bricolage Grotesque',sans-serif", letterSpacing: "-0.6px" }}>Active Infrastructure Pools</h2>
-                  <p style={{ color: "#6E6787", fontSize: "14px", margin: "0 0 24px" }}>Draft resolution thresholds and query pricing indices. Placing a trade executes simulated settlement.</p>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px", marginBottom: "28px" }}>
+                    <div>
+                      <h2 style={{ margin: "0 0 8px", font: "800 22px 'Bricolage Grotesque',sans-serif", letterSpacing: "-0.6px" }}>Active Infrastructure Pools</h2>
+                      <p style={{ color: "#6E6787", fontSize: "14px", margin: 0 }}>Draft resolution thresholds and query pricing indices. Placing a trade executes simulated settlement.</p>
+                    </div>
+                    <div style={{ position: "relative", width: "100%", maxWidth: "320px" }}>
+                      <input
+                        id="market-search-input"
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search active pools... (Press ⌘K)"
+                        style={{
+                          width: "100%",
+                          background: "#FFFBF7",
+                          border: "1px solid rgba(29,24,50,.12)",
+                          borderRadius: "9999px",
+                          padding: "12px 42px 12px 20px",
+                          fontSize: "13.5px",
+                          outline: "none",
+                          transition: "border-color 0.2s"
+                        }}
+                      />
+                      <div style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", display: "flex", gap: "2px", opacity: 0.8 }}>
+                        <Kbd>⌘</Kbd><Kbd>K</Kbd>
+                      </div>
+                    </div>
+                  </div>
                   
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
-                    {dbMarkets.map((m) => (
+                    {dbMarkets.filter(m => m.question.toLowerCase().includes(searchQuery.toLowerCase())).map((m) => (
                       <div key={m.id} style={{ background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "16px", padding: "24px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                         <div>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
@@ -417,36 +528,36 @@ export default function Dashboard() {
                           </div>
                           
                           {activeTradeMarketId === m.id ? (
-                            <div style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "10px", padding: "12px", display: "flex", flexDirection: "column", gap: "10px", marginTop: "4px" }}>
+                            <div style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px", marginTop: "4px" }}>
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                <span style={{ fontSize: "12px", fontWeight: 700 }}>Position Size (USDC)</span>
+                                <span style={{ fontSize: "12.5px", fontWeight: 700 }}>Position Size (USDC)</span>
                                 <input 
                                   type="number"
                                   value={tradeAmount}
                                   onChange={(e) => setTradeAmount(e.target.value)}
-                                  style={{ width: "70px", border: "1px solid rgba(29,24,50,.12)", borderRadius: "6px", padding: "4px 8px", font: "600 12px 'JetBrains Mono'" }}
+                                  style={{ width: "80px", border: "1px solid rgba(29,24,50,.12)", borderRadius: "8px", padding: "6px 10px", font: "600 12.5px 'JetBrains Mono'" }}
                                 />
                               </div>
                               <div style={{ display: "flex", gap: "8px" }}>
                                 <button 
                                   onClick={() => handleExecuteTrade(m.id, "YES")}
                                   disabled={executingTrade}
-                                  style={{ flex: 1, background: "#0E9160", border: "none", color: "#fff", font: "700 12px 'Instrument Sans'", padding: "8px", borderRadius: "6px", cursor: "pointer" }}>
+                                  style={{ flex: 1, background: "#0E9160", border: "none", color: "#fff", font: "700 13px 'Instrument Sans'", padding: "10px", borderRadius: "9999px", cursor: "pointer" }}>
                                   Buy YES
                                 </button>
                                 <button 
                                   onClick={() => handleExecuteTrade(m.id, "NO")}
                                   disabled={executingTrade}
-                                  style={{ flex: 1, background: "#D4491F", border: "none", color: "#fff", font: "700 12px 'Instrument Sans'", padding: "8px", borderRadius: "6px", cursor: "pointer" }}>
+                                  style={{ flex: 1, background: "#D4491F", border: "none", color: "#fff", font: "700 13px 'Instrument Sans'", padding: "10px", borderRadius: "9999px", cursor: "pointer" }}>
                                   Buy NO
                                 </button>
                               </div>
-                              <button onClick={() => setActiveTradeMarketId(null)} style={{ background: "none", border: "none", color: "#A9A2BE", fontSize: "11px", cursor: "pointer", textDecoration: "underline" }}>Cancel</button>
+                              <button onClick={() => setActiveTradeMarketId(null)} style={{ background: "none", border: "none", color: "#A9A2BE", fontSize: "11.5px", cursor: "pointer", textDecoration: "underline" }}>Cancel</button>
                             </div>
                           ) : (
                             <button 
                               onClick={() => { setActiveTradeMarketId(m.id); setTradeAmount("10"); }}
-                              style={{ width: "100%", background: "#1D1633", border: "none", color: "#fff", font: "700 13px 'Instrument Sans'", padding: "10px 0", borderRadius: "10px", cursor: "pointer", transition: "opacity 0.2s" }}>
+                              style={{ width: "100%", background: "#1D1633", border: "none", color: "#fff", font: "700 13.5px 'Instrument Sans'", padding: "11px 0", borderRadius: "9999px", cursor: "pointer", transition: "opacity 0.2s" }}>
                               Transact Shares
                             </button>
                           )}
