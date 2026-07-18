@@ -19,8 +19,12 @@ export default function Footer() {
       }}>
         {/* Branding */}
         <div>
-          <div style={{ font: "800 22px 'Bricolage Grotesque', sans-serif", letterSpacing: "-0.8px", display: "flex", alignItems: "center", gap: "6px", marginBottom: "16px" }}>
-            <span style={{ display: "inline-block", width: "10px", height: "10px", borderRadius: "50%", background: "#8200FF" }}></span>
+          <div style={{ font: "800 22px 'Bricolage Grotesque', sans-serif", letterSpacing: "-0.8px", display: "flex", alignItems: "center", gap: "9px", marginBottom: "16px" }}>
+            <svg width="26" height="26" viewBox="0 0 100 100" fill="none">
+              <rect width="100" height="100" rx="26" fill="#120F24" />
+              <path d="M22 72 C 22 72, 40 72, 47 57 C 54 42, 58 44, 65 32" stroke="#B87CFF" strokeWidth="14" strokeLinecap="round" fill="none" />
+              <circle cx="68" cy="27" r="10.5" fill="#FF5C23" />
+            </svg>
             Probable
           </div>
           <p style={{ color: "#625E77", fontSize: "14px", lineHeight: "1.6", maxWidth: "260px", margin: 0 }}>

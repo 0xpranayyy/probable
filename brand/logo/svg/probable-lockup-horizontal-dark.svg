@@ -1,0 +1,7 @@
+<svg width="320" height="80" viewBox="0 0 320 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="80" height="80" rx="20.8" fill="#FFFFFF" fill-opacity="0.08"/>
+  <path d="M17.6 57.6 C 17.6 57.6, 32 57.6, 37.6 45.6 C 43.2 33.6, 46.4 35.2, 52 25.6"
+        stroke="#B87CFF" stroke-width="11.2" stroke-linecap="round" fill="none"/>
+  <circle cx="54.4" cy="21.6" r="8.4" fill="#FF5C23"/>
+  <text x="98" y="52" font-family="'Bricolage Grotesque', sans-serif" font-weight="800" font-size="38" letter-spacing="-1.2" fill="#FFFFFF">Probable</text>
+</svg>
