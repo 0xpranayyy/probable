@@ -10,6 +10,7 @@ import Star from "../../../components/Star";
 import { LiveEvent, LiveMarket, PricePoint, OrderBook } from "@probable/sdk";
 import { useWatchlist } from "../../../lib/useWatchlist";
 import { sdk } from "../../../lib/sdk";
+import { WS_BASE_URL } from "../../../lib/config";
 
 const INTERVALS: ["1D" | "1W" | "1M" | "ALL", "1d" | "1w" | "1m" | "max"][] = [
   ["1D", "1d"], ["1W", "1w"], ["1M", "1m"], ["ALL", "max"],
@@ -117,12 +118,62 @@ export default function MarketDetailPage() {
 
   useEffect(() => {
     if (!market?.yesToken) return;
-    let alive = true;
-    const load = () => sdk.live.book(market.yesToken!).then((b) => alive && setBook(b)).catch(() => {});
-    load();
-    const iv = setInterval(load, 20_000);
-    return () => { alive = false; clearInterval(iv); };
-  }, [market?.yesToken]);
+
+    // Fetch initial book immediately
+    sdk.live.book(market.yesToken).then(setBook).catch(() => {});
+
+    // Open WebSockets connection for streaming events
+    const ws = new WebSocket(WS_BASE_URL);
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify({
+        type: "subscribe",
+        tokenIds: [market.yesToken]
+      }));
+    };
+
+    ws.onmessage = (eventMsg) => {
+      try {
+        const msg = JSON.parse(eventMsg.data);
+        if (msg.event === "quote_update" && msg.tokenId === market.yesToken) {
+          setEvent(prev => {
+            if (!prev) return null;
+            return {
+              ...prev,
+              markets: prev.markets.map((m, idx) => {
+                if (idx === sel) {
+                  return { ...m, yesPrice: msg.price };
+                }
+                return m;
+              })
+            };
+          });
+        } else if (msg.event === "book_update" && msg.tokenId === market.yesToken) {
+          sdk.live.book(market.yesToken!).then(setBook).catch(() => {});
+        } else if (msg.event === "trade" && msg.tokenId === market.yesToken) {
+          sdk.live.book(market.yesToken!).then(setBook).catch(() => {});
+          setEvent(prev => {
+            if (!prev) return null;
+            return {
+              ...prev,
+              markets: prev.markets.map((m, idx) => {
+                if (idx === sel) {
+                  return { ...m, yesPrice: msg.price };
+                }
+                return m;
+              })
+            };
+          });
+        }
+      } catch (e) {
+        console.warn("Failed to parse websocket message:", e);
+      }
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, [market?.yesToken, sel]);
 
   const watched = event ? isWatched(event.id) : false;
   const watchItem = useMemo(() => items.find((i) => i.eventId === String(event?.id)), [items, event]);
