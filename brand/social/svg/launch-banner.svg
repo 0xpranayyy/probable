@@ -1,0 +1,42 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1B1033"/>
+      <stop offset="0.55" stop-color="#120F24"/>
+      <stop offset="1" stop-color="#170B1E"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(240 130) rotate(90) scale(480 620)">
+      <stop stop-color="#8200FF" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#8200FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1000 560) rotate(90) scale(380 460)">
+      <stop stop-color="#FF5C23" stop-opacity="0.25"/>
+      <stop offset="1" stop-color="#FF5C23" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow1)"/>
+  <rect width="1200" height="630" fill="url(#glow2)"/>
+
+  <!-- large decorative curve -->
+  <path d="M 80 560 C 80 560, 380 560, 500 460 C 620 360, 700 380, 820 280 C 920 195, 1020 200, 1120 130"
+        stroke="#B87CFF" stroke-opacity="0.13" stroke-width="26" stroke-linecap="round" fill="none"/>
+
+  <!-- eyebrow -->
+  <g transform="translate(600,168)" text-anchor="middle">
+    <rect x="-110" y="-24" width="220" height="40" rx="20" fill="#FFFFFF" fill-opacity="0.07"/>
+    <circle cx="-84" cy="-4" r="4" fill="#3ADFA5"/>
+    <text x="-70" y="2" font-family="'JetBrains Mono', monospace" font-weight="600" font-size="13" letter-spacing="1.6" fill="#B3A8D9" text-anchor="start">NOW LIVE</text>
+  </g>
+
+  <!-- logo mark, large + centered -->
+  <g transform="translate(480,214)">
+    <rect width="120" height="120" rx="31" fill="#FFFFFF" fill-opacity="0.06"/>
+    <path d="M26.4 86.4 C 26.4 86.4, 48 86.4, 56.4 68.4 C 64.8 50.4, 69.6 52.8, 78 38.4"
+          stroke="#B87CFF" stroke-width="16.8" stroke-linecap="round" fill="none"/>
+    <circle cx="81.6" cy="32.4" r="12.6" fill="#FF5C23"/>
+  </g>
+
+  <text x="600" y="392" text-anchor="middle" font-family="'Bricolage Grotesque', sans-serif" font-weight="800" font-size="64" letter-spacing="-2.2" fill="#FFFFFF">Probable</text>
+  <text x="600" y="436" text-anchor="middle" font-family="'Instrument Sans', sans-serif" font-weight="500" font-size="22" fill="#B3A8D9">Financial infrastructure for prediction markets</text>
+</svg>

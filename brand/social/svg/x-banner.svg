@@ -1,0 +1,32 @@
+<svg width="1500" height="500" viewBox="0 0 1500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1500" height="500" fill="#120F24"/>
+
+  <!-- soft glow -->
+  <defs>
+    <radialGradient id="glow1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(220 160) rotate(90) scale(420 620)">
+      <stop stop-color="#8200FF" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#8200FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1320 420) rotate(90) scale(360 480)">
+      <stop stop-color="#FF5C23" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#FF5C23" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1500" height="500" fill="url(#glow1)"/>
+  <rect width="1500" height="500" fill="url(#glow2)"/>
+
+  <!-- large decorative watermark curve, echoing the mark at scale -->
+  <path d="M 120 430 C 120 430, 480 430, 640 320 C 800 210, 900 230, 1060 130 C 1180 55, 1300 60, 1420 20"
+        stroke="#B87CFF" stroke-opacity="0.14" stroke-width="30" stroke-linecap="round" fill="none"/>
+
+  <!-- logo mark -->
+  <g transform="translate(72,182)">
+    <rect width="96" height="96" rx="25" fill="#FFFFFF" fill-opacity="0.06"/>
+    <path d="M21.1 69.1 C 21.1 69.1, 38.4 69.1, 45.1 54.7 C 51.8 40.3, 55.7 42.2, 62.4 30.7"
+          stroke="#B87CFF" stroke-width="13.4" stroke-linecap="round" fill="none"/>
+    <circle cx="65.3" cy="25.9" r="10.1" fill="#FF5C23"/>
+  </g>
+
+  <text x="190" y="256" font-family="'Bricolage Grotesque', sans-serif" font-weight="800" font-size="58" letter-spacing="-1.8" fill="#FFFFFF">Probable</text>
+  <text x="191" y="298" font-family="'Instrument Sans', sans-serif" font-weight="500" font-size="24" fill="#B3A8D9">Financial infrastructure for prediction markets</text>
+</svg>

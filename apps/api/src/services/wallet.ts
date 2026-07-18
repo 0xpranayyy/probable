@@ -1,11 +1,13 @@
 import { PrivyClient } from "@privy-io/server-auth";
 import { prisma } from "@probable/db";
 
-// This is the bridged USDC.e contract ("USD Coin (PoS)"), NOT native USDC
-// (0x3c499c...c359). Verified against @polymarket/clob-client's own
-// MATIC_CONTRACTS.collateral — Polymarket's CLOB Exchange settles in USDC.e,
-// so this has to match exactly or real trades/approvals go to the wrong token.
-export const USDC_POLYGON = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
+// Polymarket's CLOB V2 migration (~2026-04-28) replaced USDC.e collateral
+// with their own settlement token, "Polymarket USD" (pUSD). Verified
+// on-chain: name()="Polymarket USD", symbol()="pUSD", decimals()=6, and
+// cross-checked against @polymarket/clob-client-v2's own MATIC_CONTRACTS.
+// This is NOT USDC or USDC.e — funding a wallet with either of those will
+// not let it trade; it needs pUSD specifically.
+export const PUSD_POLYGON = "0xC011a7E12a19f7B1f670d46F03B03f3342E82DFB";
 export const POLYGON_CAIP2 = "eip155:137";
 const POLYGON_RPC = process.env.POLYGON_RPC_URL || "https://1rpc.io/matic";
 
@@ -57,8 +59,8 @@ export class WalletService {
     };
   }
 
-  // Real on-chain read: current USDC balance on Polygon mainnet for the
-  // given address, via a direct eth_call against the verified USDC contract.
+  // Real on-chain read: current pUSD balance on Polygon mainnet for the
+  // given address, via a direct eth_call against the verified collateral contract.
   static async getBalance(address: string) {
     const selector = "0x70a08231"; // balanceOf(address)
     const data = selector + address.toLowerCase().replace(/^0x/, "").padStart(64, "0");
@@ -68,7 +70,7 @@ export class WalletService {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         jsonrpc: "2.0", id: 1, method: "eth_call",
-        params: [{ to: USDC_POLYGON, data }, "latest"],
+        params: [{ to: PUSD_POLYGON, data }, "latest"],
       }),
     });
     const json = await res.json();
@@ -77,10 +79,10 @@ export class WalletService {
     const raw = BigInt(json.result);
     return {
       address,
-      token: "USDC",
+      token: "pUSD",
       chain: "Polygon",
-      contractAddress: USDC_POLYGON,
-      balance: Number(raw) / 1e6, // USDC has 6 decimals
+      contractAddress: PUSD_POLYGON,
+      balance: Number(raw) / 1e6, // pUSD has 6 decimals
     };
   }
 }
