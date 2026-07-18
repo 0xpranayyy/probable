@@ -299,6 +299,11 @@ app.get('/v1/polyscore', authMiddleware, async (c) => {
   return c.json(scoreDetails)
 })
 
+app.get('/v1/polyscore/leaderboard', authMiddleware, async (c) => {
+  const leaderboard = await PolyScoreService.getLeaderboard()
+  return c.json(leaderboard)
+})
+
 app.get('/v1/webhooks/logs', authMiddleware, async (c) => {
   const user = c.get('user')
   const deliveries = await prisma.webhookDelivery.findMany({

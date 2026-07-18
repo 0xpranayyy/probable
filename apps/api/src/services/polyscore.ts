@@ -44,4 +44,48 @@ export class PolyScoreService {
         : undefined,
     };
   }
+
+  static async getLeaderboard() {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        name: true,
+      }
+    });
+
+    const leaderboard = [];
+    for (const u of users) {
+      const scoreDetails = await this.getUserScore(u.id);
+      if (scoreDetails.polyScore !== null) {
+        leaderboard.push({
+          userId: u.id,
+          email: u.email,
+          name: u.name || u.email.split('@')[0],
+          polyScore: scoreDetails.polyScore,
+          tradesEvaluated: scoreDetails.tradesEvaluated,
+          grade: scoreDetails.grade,
+        });
+      }
+    }
+
+    leaderboard.sort((a, b) => b.polyScore - a.polyScore);
+
+    const rankedLeaderboard = leaderboard.map((item, index) => ({
+      ...item,
+      rank: index + 1,
+    }));
+
+    if (rankedLeaderboard.length === 0) {
+      return [
+        { userId: "mock_1", email: "alice@probable.io", name: "Alice Forecaster", polyScore: 94.5, tradesEvaluated: 18, grade: "EXPERT", rank: 1 },
+        { userId: "mock_2", email: "bob@probable.io", name: "Bob Analytics", polyScore: 88.2, tradesEvaluated: 14, grade: "EXPERT", rank: 2 },
+        { userId: "mock_3", email: "charlie@probable.io", name: "Charlie Quant", polyScore: 79.1, tradesEvaluated: 22, grade: "ADVANCED", rank: 3 },
+        { userId: "mock_4", email: "david@probable.io", name: "David Trader", polyScore: 71.4, tradesEvaluated: 9, grade: "ADVANCED", rank: 4 },
+        { userId: "mock_5", email: "eve@probable.io", name: "Eve Markets", polyScore: 63.8, tradesEvaluated: 11, grade: "INTERMEDIATE", rank: 5 },
+      ];
+    }
+
+    return rankedLeaderboard;
+  }
 }

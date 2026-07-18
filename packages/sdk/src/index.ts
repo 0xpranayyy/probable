@@ -276,6 +276,9 @@ export class ProbableClient {
     getPolyScore: async (userId: string) => {
       return this.request(`/v1/polyscore?userId=${encodeURIComponent(userId)}`);
     },
+    getLeaderboard: async () => {
+      return this.request("/v1/polyscore/leaderboard");
+    },
     getPricingConfig: async () => {
       return this.request("/v1/config/pricing");
     },
