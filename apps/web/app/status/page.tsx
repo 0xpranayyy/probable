@@ -34,7 +34,7 @@ export default function StatusPage() {
   }, []);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#FFFBF7", color: "#1D1832", fontFamily: "'Instrument Sans', sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#F8F8FA", color: "#120F24", fontFamily: "'Instrument Sans', sans-serif" }}>
       <Ticker />
       <Navbar />
 
@@ -68,7 +68,7 @@ export default function StatusPage() {
             return (
               <div key={sys.id} style={{
                 background: "#fff",
-                border: "1px solid rgba(29, 24, 50, 0.08)",
+                border: "1px solid rgba(130, 0, 255, 0.08)",
                 borderRadius: "16px",
                 padding: "24px",
                 boxShadow: "0 4px 20px rgba(0,0,0,0.01)"
@@ -82,7 +82,7 @@ export default function StatusPage() {
                     <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", background: "#17B877" }}></span>
                   </div>
                 </div>
-                <div style={{ color: "#6E6787", fontSize: "13.5px", lineHeight: "1.5", marginBottom: "14px" }}>{sys.desc}</div>
+                <div style={{ color: "#625E77", fontSize: "13.5px", lineHeight: "1.5", marginBottom: "14px" }}>{sys.desc}</div>
 
                 {/* Uptime blocks layout */}
                 <div style={{ display: "flex", gap: "3px", alignItems: "center" }}>
@@ -97,7 +97,7 @@ export default function StatusPage() {
                     }} title={`Day -${30 - idx}: 100% uptime`}></div>
                   ))}
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "#A9A2BE", marginTop: "8px", fontFamily: "'JetBrains Mono'" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "#9490A8", marginTop: "8px", fontFamily: "'JetBrains Mono'" }}>
                   <span>30 days ago</span>
                   <span>99.98% uptime average</span>
                   <span>Today</span>
@@ -109,18 +109,18 @@ export default function StatusPage() {
 
         {/* Historical Incidents */}
         <h2 style={{ font: "800 24px 'Bricolage Grotesque'", letterSpacing: "-0.8px", marginBottom: "20px" }}>Incident History</h2>
-        <div style={{ borderLeft: "2px solid rgba(29, 24, 50, 0.08)", paddingLeft: "24px", marginLeft: "10px" }}>
+        <div style={{ borderLeft: "2px solid rgba(130, 0, 255, 0.08)", paddingLeft: "24px", marginLeft: "10px" }}>
           <div style={{ marginBottom: "28px" }}>
-            <div style={{ font: "700 15px 'JetBrains Mono', monospace", color: "#D6336C", marginBottom: "4px" }}>July 14, 2026</div>
+            <div style={{ font: "700 15px 'JetBrains Mono', monospace", color: "#8200FF", marginBottom: "4px" }}>July 14, 2026</div>
             <div style={{ font: "700 16px 'Instrument Sans'", marginBottom: "6px" }}>Polymarket CLOB Signer Maintenance</div>
-            <p style={{ color: "#6E6787", fontSize: "13.5px", lineHeight: "1.6", margin: 0 }}>
+            <p style={{ color: "#625E77", fontSize: "13.5px", lineHeight: "1.6", margin: 0 }}>
               API calls to `/v1/trades` experienced minor response latency spikes during an out-of-band Polymarket contract upgrade. The issue resolved automatically in 12 minutes.
             </p>
           </div>
           <div>
-            <div style={{ font: "700 15px 'JetBrains Mono', monospace", color: "#A9A2BE", marginBottom: "4px" }}>June 22, 2026</div>
+            <div style={{ font: "700 15px 'JetBrains Mono', monospace", color: "#9490A8", marginBottom: "4px" }}>June 22, 2026</div>
             <div style={{ font: "700 16px 'Instrument Sans'", marginBottom: "6px" }}>Scheduled Webhook Dispatch Upgrades</div>
-            <p style={{ color: "#6E6787", fontSize: "13.5px", lineHeight: "1.6", margin: 0 }}>
+            <p style={{ color: "#625E77", fontSize: "13.5px", lineHeight: "1.6", margin: 0 }}>
               Completed database schema adjustments to support high-performance logging. Uptime stats remained unaffected.
             </p>
           </div>

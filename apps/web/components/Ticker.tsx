@@ -12,11 +12,11 @@ interface TickerItem {
 
 const staticFallback = [
   { q: "ETH > $4k in May?", yesStr: "88", deltaColor: "#3ADFA5", deltaStr: "+2.4%" },
-  { q: "Fed cuts rates in June?", yesStr: "32", deltaColor: "#FF8FB5", deltaStr: "-1.1%" },
+  { q: "Fed cuts rates in June?", yesStr: "32", deltaColor: "#FF5C23", deltaStr: "-1.1%" },
   { q: "SpaceX Mars landing '29?", yesStr: "14", deltaColor: "#3ADFA5", deltaStr: "+0.8%" },
   { q: "US Election '24 Winner?", yesStr: "52", deltaColor: "#8B84A3", deltaStr: "0.0%" },
   { q: "AI passes Turing test '25?", yesStr: "76", deltaColor: "#3ADFA5", deltaStr: "+4.2%" },
-  { q: "BTC > $100k in 2024?", yesStr: "64", deltaColor: "#FF8FB5", deltaStr: "-0.5%" },
+  { q: "BTC > $100k in 2024?", yesStr: "64", deltaColor: "#FF5C23", deltaStr: "-0.5%" },
   { q: "Apple AR glasses '25?", yesStr: "41", deltaColor: "#3ADFA5", deltaStr: "+1.9%" }
 ];
 
@@ -34,7 +34,7 @@ export default function Ticker() {
             const yesCents = Math.round(m.yesPrice * 100);
             const deltaVal = (m.oneDayPriceChange ?? 0) * 100;
             const deltaStr = `${deltaVal >= 0 ? "+" : ""}${deltaVal.toFixed(1)}%`;
-            const deltaColor = deltaVal > 0 ? "#3ADFA5" : deltaVal < 0 ? "#FF8FB5" : "#8B84A3";
+            const deltaColor = deltaVal > 0 ? "#3ADFA5" : deltaVal < 0 ? "#FF5C23" : "#8B84A3";
             let cleanedQ = e.binary ? e.title : `${e.title} — ${m.groupItemTitle}`;
             if (cleanedQ.length > 45) cleanedQ = cleanedQ.substring(0, 42) + "...";
             return { q: cleanedQ, yesStr: yesCents.toString(), deltaColor, deltaStr };
@@ -53,12 +53,12 @@ export default function Ticker() {
   }, []);
 
   return (
-    <div style={{ background: "#1D1633", overflow: "hidden", height: "36px", display: "flex", alignItems: "center" }}>
+    <div style={{ background: "#120F24", overflow: "hidden", height: "36px", display: "flex", alignItems: "center" }}>
       <div style={{ display: "flex", whiteSpace: "nowrap", animation: "marquee 45s linear infinite", willChange: "transform" }}>
         {items.map((t, i) => (
           <div key={i} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "0 28px", font: "500 11.5px 'JetBrains Mono',monospace" }}>
             <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#3ADFA5", animation: "pulse 2s infinite" }}></span>
-            <span style={{ color: "#B9AEDB" }}>{t.q}</span>
+            <span style={{ color: "#B3A8D9" }}>{t.q}</span>
             <span style={{ color: "#fff", fontWeight: "600" }}>{t.yesStr}¢</span>
             <span style={{ color: t.deltaColor }}>{t.deltaStr}</span>
           </div>
@@ -67,7 +67,7 @@ export default function Ticker() {
         {items.map((t, i) => (
           <div key={`dup-${i}`} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "0 28px", font: "500 11.5px 'JetBrains Mono',monospace" }}>
             <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#3ADFA5", animation: "pulse 2s infinite" }}></span>
-            <span style={{ color: "#B9AEDB" }}>{t.q}</span>
+            <span style={{ color: "#B3A8D9" }}>{t.q}</span>
             <span style={{ color: "#fff", fontWeight: "600" }}>{t.yesStr}¢</span>
             <span style={{ color: t.deltaColor }}>{t.deltaStr}</span>
           </div>

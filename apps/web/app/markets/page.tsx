@@ -38,10 +38,10 @@ function fmtCents(p: number | null) {
 function OutcomeRow({ label, price }: { label: string; price: number | null }) {
   const pct = Math.round((price ?? 0) * 100);
   return (
-    <div style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 10px", borderRadius: 8, overflow: "hidden", background: "#FFFBF7", border: "1px solid rgba(29,24,50,.06)" }}>
-      <div style={{ position: "absolute", inset: 0, width: pct + "%", background: "rgba(240,86,140,.09)" }} />
+    <div style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 10px", borderRadius: 8, overflow: "hidden", background: "#F8F8FA", border: "1px solid rgba(130,0,255,.06)" }}>
+      <div style={{ position: "absolute", inset: 0, width: pct + "%", background: "rgba(130,0,255,.09)" }} />
       <span style={{ position: "relative", fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingRight: 8 }}>{label}</span>
-      <span style={{ position: "relative", font: "600 13px 'JetBrains Mono',monospace", color: "#D6336C" }}>{pct}%</span>
+      <span style={{ position: "relative", font: "600 13px 'JetBrains Mono',monospace", color: "#8200FF" }}>{pct}%</span>
     </div>
   );
 }
@@ -49,8 +49,8 @@ function OutcomeRow({ label, price }: { label: string; price: number | null }) {
 function EventCard({ event, watched, onToggle }: { event: LiveEvent; watched: boolean; onToggle: () => void }) {
   const m = event.markets[0];
   return (
-    <Link href={`/market/${event.slug}`} style={{ textDecoration: "none", color: "#1D1832" }}>
-      <div className="premium-card" style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: 16, padding: 18, height: "100%", display: "flex", flexDirection: "column", gap: 12 }}>
+    <Link href={`/market/${event.slug}`} style={{ textDecoration: "none", color: "#120F24" }}>
+      <div className="premium-card" style={{ background: "#fff", border: "1px solid rgba(130,0,255,.08)", borderRadius: 16, padding: 18, height: "100%", display: "flex", flexDirection: "column", gap: 12 }}>
         <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
           {event.image && <img src={event.image} alt="" width={42} height={42} style={{ borderRadius: 10, objectFit: "cover", flex: "none" }} />}
           <div style={{ fontWeight: 700, fontSize: 15, lineHeight: 1.35, flex: 1 }}>{event.title}</div>
@@ -61,7 +61,7 @@ function EventCard({ event, watched, onToggle }: { event: LiveEvent; watched: bo
             <span style={{ font: "600 30px 'JetBrains Mono',monospace", letterSpacing: "-2px", color: "#0E9160" }}>{fmtCents(m.yesPrice)}</span>
             <div style={{ display: "flex", flexDirection: "column" }}>
               <span style={{ font: "600 11px 'JetBrains Mono',monospace", color: "#0E9160" }}>YES</span>
-              <span style={{ font: "500 11px 'JetBrains Mono',monospace", color: "#A9A2BE" }}>NO {fmtCents(m.yesPrice != null ? 1 - m.yesPrice : null)}</span>
+              <span style={{ font: "500 11px 'JetBrains Mono',monospace", color: "#9490A8" }}>NO {fmtCents(m.yesPrice != null ? 1 - m.yesPrice : null)}</span>
             </div>
             {m.oneDayPriceChange != null && (
               <span style={{ marginLeft: "auto", font: "600 12px 'JetBrains Mono',monospace", color: m.oneDayPriceChange >= 0 ? "#0E9160" : "#D4491F" }}>
@@ -72,10 +72,10 @@ function EventCard({ event, watched, onToggle }: { event: LiveEvent; watched: bo
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {event.markets.slice(0, 3).map((om, i) => <OutcomeRow key={i} label={om.groupItemTitle} price={om.yesPrice} />)}
-            {event.markets.length > 3 && <span style={{ fontSize: 11.5, color: "#A9A2BE" }}>+{event.markets.length - 3} more outcomes</span>}
+            {event.markets.length > 3 && <span style={{ fontSize: 11.5, color: "#9490A8" }}>+{event.markets.length - 3} more outcomes</span>}
           </div>
         )}
-        <div style={{ marginTop: "auto", display: "flex", justifyContent: "space-between", font: "500 11.5px 'JetBrains Mono',monospace", color: "#A9A2BE", borderTop: "1px dashed rgba(29,24,50,.08)", paddingTop: 10 }}>
+        <div style={{ marginTop: "auto", display: "flex", justifyContent: "space-between", font: "500 11.5px 'JetBrains Mono',monospace", color: "#9490A8", borderTop: "1px dashed rgba(130,0,255,.08)", paddingTop: 10 }}>
           <span>{fmtUsd(event.volume24hr)} · 24h</span>
           <span>ends {fmtDate(event.endDate)}</span>
         </div>
@@ -107,25 +107,25 @@ export default function MarketsPage() {
   }, [category, query]);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#FFFBF7", color: "#1D1832", fontFamily: "'Instrument Sans',sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#F8F8FA", color: "#120F24", fontFamily: "'Instrument Sans',sans-serif" }}>
       <Ticker />
       <Navbar />
       <div style={{ maxWidth: 1180, margin: "0 auto", padding: "48px 32px 96px" }}>
         <h1 style={{ margin: "0 0 4px", font: "800 40px 'Bricolage Grotesque'", letterSpacing: "-1.6px" }}>Markets</h1>
-        <p style={{ margin: "0 0 24px", color: "#6E6787", fontSize: 15 }}>Live prediction markets, streamed from Polymarket.</p>
+        <p style={{ margin: "0 0 24px", color: "#625E77", fontSize: 15 }}>Live prediction markets, streamed from Polymarket.</p>
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 26 }}>
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search markets…"
-            style={{ flex: "1 1 220px", maxWidth: 320, background: "#fff", border: "1px solid rgba(29,24,50,.12)", borderRadius: 999, padding: "10px 18px", font: "500 13.5px 'Instrument Sans'", color: "#1D1832", outline: "none" }}
+            style={{ flex: "1 1 220px", maxWidth: 320, background: "#fff", border: "1px solid rgba(130,0,255,.12)", borderRadius: 999, padding: "10px 18px", font: "500 13.5px 'Instrument Sans'", color: "#120F24", outline: "none" }}
           />
           {CATEGORIES.map((cat) => {
             const act = category === cat.slug && !query.trim();
             return (
               <button key={cat.label} onClick={() => { setQuery(""); setCategory(cat.slug); }}
-                style={{ background: act ? "rgba(240,86,140,.12)" : "#fff", border: `1px solid ${act ? "#F0568C" : "rgba(29,24,50,.12)"}`, color: act ? "#D6336C" : "#6E6787", font: "600 12px 'Instrument Sans'", padding: "8px 15px", borderRadius: 999, cursor: "pointer", transition: "all .15s" }}>
+                style={{ background: act ? "rgba(130,0,255,.12)" : "#fff", border: `1px solid ${act ? "#8200FF" : "rgba(130,0,255,.12)"}`, color: act ? "#8200FF" : "#625E77", font: "600 12px 'Instrument Sans'", padding: "8px 15px", borderRadius: 999, cursor: "pointer", transition: "all .15s" }}>
                 {cat.label}
               </button>
             );
@@ -134,7 +134,7 @@ export default function MarketsPage() {
 
         {error && <div style={{ color: "#D4491F", fontSize: 14, marginBottom: 16 }}>{error}</div>}
         {loading ? (
-          <div style={{ color: "#A9A2BE", font: "500 13px 'JetBrains Mono',monospace", padding: "40px 0" }}>Loading live markets…</div>
+          <div style={{ color: "#9490A8", font: "500 13px 'JetBrains Mono',monospace", padding: "40px 0" }}>Loading live markets…</div>
         ) : (
           <div className="markets-grid">
             {events.map((e) => (
@@ -143,7 +143,7 @@ export default function MarketsPage() {
           </div>
         )}
         {!loading && !events.length && !error && (
-          <div style={{ color: "#A9A2BE", fontSize: 14, padding: "40px 0" }}>No markets found{query ? ` for "${query}"` : ""}.</div>
+          <div style={{ color: "#9490A8", fontSize: 14, padding: "40px 0" }}>No markets found{query ? ` for "${query}"` : ""}.</div>
         )}
       </div>
       <Footer />

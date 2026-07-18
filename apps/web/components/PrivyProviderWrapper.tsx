@@ -13,7 +13,7 @@ export default function PrivyProviderWrapper({ children }: { children: React.Rea
       config={{
         appearance: {
           theme: "dark",
-          accentColor: "#F0568C",
+          accentColor: "#8200FF",
         },
         embeddedWallets: {
           createOnLogin: "users-without-wallets",

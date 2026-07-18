@@ -7,13 +7,13 @@ import { ProbableClient } from "@probable/sdk";
 import { usePrivy } from "@privy-io/react-auth";
 
 const navItems = [
-  { label: "Home", href: "/", bg: "transparent", color: "#1D1832" },
-  { label: "Product", href: "/product", bg: "transparent", color: "#1D1832" },
-  { label: "Markets", href: "/markets", bg: "transparent", color: "#1D1832" },
-  { label: "Watchlist", href: "/watchlist", bg: "transparent", color: "#1D1832" },
-  { label: "Docs", href: "/docs", bg: "transparent", color: "#1D1832" },
-  { label: "Dashboard", href: "/dashboard", bg: "transparent", color: "#1D1832" },
-  { label: "About", href: "/about", bg: "transparent", color: "#1D1832" },
+  { label: "Home", href: "/", bg: "transparent", color: "#120F24" },
+  { label: "Product", href: "/product", bg: "transparent", color: "#120F24" },
+  { label: "Markets", href: "/markets", bg: "transparent", color: "#120F24" },
+  { label: "Watchlist", href: "/watchlist", bg: "transparent", color: "#120F24" },
+  { label: "Docs", href: "/docs", bg: "transparent", color: "#120F24" },
+  { label: "Dashboard", href: "/dashboard", bg: "transparent", color: "#120F24" },
+  { label: "About", href: "/about", bg: "transparent", color: "#120F24" },
 ];
 
 export default function Navbar() {
@@ -48,16 +48,16 @@ export default function Navbar() {
   };
 
   return (
-    <div style={{ position: "sticky", top: 0, zIndex: 50, backdropFilter: "blur(16px)", background: "rgba(255,251,247,.85)", borderBottom: "1px solid rgba(29,24,50,.08)" }}>
+    <div style={{ position: "sticky", top: 0, zIndex: 50, backdropFilter: "blur(16px)", background: "rgba(248,248,250,.85)", borderBottom: "1px solid rgba(130,0,255,.08)" }}>
       <div style={{ maxWidth: "1180px", margin: "0 auto", padding: "0 32px", height: "66px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "20px" }}>
         
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", textDecoration: "none" }}>
           <svg width="30" height="30" viewBox="0 0 30 30">
-            <rect width="30" height="30" rx="9" fill="#1D1633"></rect>
-            <path d="M7 20.5 L12 13 L16 16.5 L23 8" stroke="#FF8FB5" strokeWidth="2.6" fill="none" strokeLinecap="round" strokeLinejoin="round"></path>
-            <circle cx="23" cy="8" r="2.2" fill="#3ADFA5"></circle>
+            <rect width="30" height="30" rx="9" fill="#120F24"></rect>
+            <path d="M7 20.5 L12 13 L16 16.5 L23 8" stroke="#8200FF" strokeWidth="2.6" fill="none" strokeLinecap="round" strokeLinejoin="round"></path>
+            <circle cx="23" cy="8" r="2.2" fill="#FF5C23"></circle>
           </svg>
-          <span style={{ font: "700 20px 'Bricolage Grotesque',sans-serif", letterSpacing: "-.5px", color: "#1D1633" }}>Probable</span>
+          <span style={{ font: "700 20px 'Bricolage Grotesque',sans-serif", letterSpacing: "-.5px", color: "#120F24" }}>Probable</span>
         </Link>
         
         <div style={{ display: "flex", gap: "2px", alignItems: "center" }}>
@@ -71,7 +71,7 @@ export default function Navbar() {
                 onMouseEnter={() => setHoveredIndex(i)}
                 onMouseLeave={() => setHoveredIndex(null)}
                 style={{ 
-                  background: isHovered || isActive ? "rgba(29,24,50,.06)" : n.bg, 
+                  background: isHovered || isActive ? "rgba(130,0,255,.08)" : n.bg, 
                   border: "none", 
                   color: n.color, 
                   font: "600 14.5px 'Instrument Sans',sans-serif", 
@@ -95,7 +95,7 @@ export default function Navbar() {
                 display: "flex",
                 alignItems: "center",
                 gap: "8px",
-                background: "rgba(29, 24, 50, 0.05)",
+                background: "rgba(130, 0, 255, 0.06)",
                 padding: "6px 12px",
                 borderRadius: "999px",
                 fontSize: "14px",
@@ -105,7 +105,7 @@ export default function Navbar() {
                   width: "20px",
                   height: "20px",
                   borderRadius: "50%",
-                  background: "#F0568C",
+                  background: "#8200FF",
                   color: "#fff",
                   display: "flex",
                   alignItems: "center",
@@ -121,13 +121,13 @@ export default function Navbar() {
                 style={{ 
                   background: "none", 
                   border: "none", 
-                  color: "#6E6787", 
+                  color: "#625E77", 
                   font: "600 14px 'Instrument Sans',sans-serif", 
                   cursor: "pointer",
                   transition: "color .15s"
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.color = "#D6336C"}
-                onMouseLeave={(e) => e.currentTarget.style.color = "#6E6787"}
+                onMouseEnter={(e) => e.currentTarget.style.color = "#8200FF"}
+                onMouseLeave={(e) => e.currentTarget.style.color = "#625E77"}
               >
                 Sign out
               </button>
@@ -141,7 +141,7 @@ export default function Navbar() {
                 style={{ 
                   background: "none", 
                   border: "none", 
-                  color: signInHover ? "#D6336C" : "#1D1832", 
+                  color: signInHover ? "#8200FF" : "#120F24", 
                   font: "600 14.5px 'Instrument Sans',sans-serif", 
                   cursor: "pointer",
                   transition: "color .15s",
@@ -158,7 +158,7 @@ export default function Navbar() {
                   display: "flex", 
                   alignItems: "center", 
                   gap: "7px", 
-                  background: getKeysHover ? "#2E2352" : "#1D1633", 
+                  background: getKeysHover ? "#6A00D6" : "#8200FF", 
                   border: "none", 
                   color: "#fff", 
                   font: "600 14.5px 'Instrument Sans',sans-serif", 
@@ -167,11 +167,11 @@ export default function Navbar() {
                   cursor: "pointer", 
                   transition: "all .2s",
                   transform: getKeysHover ? "translateY(-1px)" : "none",
-                  boxShadow: getKeysHover ? "0 8px 22px rgba(29,22,51,.25)" : "none",
+                  boxShadow: getKeysHover ? "0 8px 22px rgba(130,0,255,.35)" : "none",
                   textDecoration: "none"
                 }}
               >
-                Get API keys <span style={{ color: "#FF8FB5" }}>→</span>
+                Get API keys <span style={{ color: "#fff", opacity: 0.85 }}>→</span>
               </Link>
             </>
           )}

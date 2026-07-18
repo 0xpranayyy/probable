@@ -55,7 +55,7 @@ input[type=range] {
   appearance: none;
   height: 6px;
   border-radius: 3px;
-  background: linear-gradient(90deg, var(--primary) var(--fill, 50%), rgba(29, 24, 50, .1) var(--fill, 50%));
+  background: linear-gradient(90deg, var(--primary) var(--fill, 50%), rgba(18, 15, 36, .1) var(--fill, 50%));
   outline: none;
 }
 input[type=range]::-webkit-slider-thumb {
@@ -124,6 +124,20 @@ input[type=range]::-webkit-slider-thumb {
 @media (max-width: 1024px) {
   .detail-grid {
     grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .hero-back-panel {
+    display: none !important;
+  }
+  .hero-preview-stage {
+    height: auto !important;
+  }
+  .hero-front-panel {
+    position: relative !important;
+    width: 100% !important;
+    right: auto !important;
   }
 }
 @media (max-width: 1024px) {

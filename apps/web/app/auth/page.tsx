@@ -50,7 +50,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#FFFBF7", color: "#1D1832", fontFamily: "'Instrument Sans', sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#F8F8FA", color: "#120F24", fontFamily: "'Instrument Sans', sans-serif" }}>
       <Ticker />
       <Navbar />
 
@@ -58,20 +58,20 @@ export default function AuthPage() {
         
         <div style={{
           background: "#fff",
-          border: "1px solid rgba(29, 24, 50, 0.08)",
+          border: "1px solid rgba(130, 0, 255, 0.08)",
           borderRadius: "24px",
           padding: "48px 38px",
           width: "100%",
           maxWidth: "440px",
-          boxShadow: "0 20px 48px rgba(74,42,90,.05)",
+          boxShadow: "0 20px 48px rgba(18,15,36,.05)",
           animation: "fadeUp 0.6s ease"
         }}>
           {/* Header */}
           <div style={{ textAlign: "center", marginBottom: "32px" }}>
-            <h2 style={{ margin: "0 0 8px", font: "800 30px 'Bricolage Grotesque'", letterSpacing: "-1.2px", color: "#1D1633" }}>
+            <h2 style={{ margin: "0 0 8px", font: "800 30px 'Bricolage Grotesque'", letterSpacing: "-1.2px", color: "#120F24" }}>
               Welcome to Probable
             </h2>
-            <p style={{ color: "#6E6787", fontSize: "14px", margin: 0, lineHeight: 1.5 }}>
+            <p style={{ color: "#625E77", fontSize: "14px", margin: 0, lineHeight: 1.5 }}>
               Prediction market infrastructure for developers. Authenticate to manage API keys, monitor webhooks, and track real Polygon mainnet positions.
             </p>
           </div>
@@ -80,9 +80,9 @@ export default function AuthPage() {
             {message && (
               <div style={{
                 fontSize: "13.5px",
-                color: isError ? "#D6336C" : "#17B877",
-                background: isError ? "rgba(214,51,108,0.07)" : "rgba(23,184,119,0.07)",
-                border: `1px solid ${isError ? "rgba(214,51,108,0.15)" : "rgba(23,184,119,0.15)"}`,
+                color: isError ? "#8200FF" : "#17B877",
+                background: isError ? "rgba(255,92,35,0.07)" : "rgba(23,184,119,0.07)",
+                border: `1px solid ${isError ? "rgba(255,92,35,0.15)" : "rgba(23,184,119,0.15)"}`,
                 padding: "12px 16px",
                 borderRadius: "10px",
                 fontWeight: 600,
@@ -97,7 +97,7 @@ export default function AuthPage() {
               disabled={loading || !ready}
               style={{
                 width: "100%",
-                background: "#1D1633",
+                background: "#120F24",
                 color: "#fff",
                 border: "none",
                 borderRadius: "10px",
@@ -106,13 +106,13 @@ export default function AuthPage() {
                 cursor: "pointer",
                 transition: "opacity 0.2s",
                 opacity: (loading || !ready) ? 0.7 : 1,
-                boxShadow: "0 4px 12px rgba(29, 22, 51, 0.15)"
+                boxShadow: "0 4px 12px rgba(18, 15, 36, 0.15)"
               }}
             >
               {loading ? "Please wait..." : "Sign In with Privy"}
             </button>
             
-            <div style={{ fontSize: "11px", color: "#A9A2BE", textAlign: "center", marginTop: "8px" }}>
+            <div style={{ fontSize: "11px", color: "#9490A8", textAlign: "center", marginTop: "8px" }}>
               Secure non-custodial wallet creation powered by Privy.
             </div>
           </div>

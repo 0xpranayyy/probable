@@ -30,7 +30,7 @@ function fmtDate(d: string | null) {
 
 function Chart({ history }: { history: PricePoint[] }) {
   if (!history?.length) {
-    return <div style={{ height: 220, display: "flex", alignItems: "center", justifyContent: "center", color: "#A9A2BE", font: "500 12px 'JetBrains Mono'" }}>No price history</div>;
+    return <div style={{ height: 220, display: "flex", alignItems: "center", justifyContent: "center", color: "#9490A8", font: "500 12px 'JetBrains Mono'" }}>No price history</div>;
   }
   const W = 600, H = 220, PAD = 6;
   const ps = history.map((h) => h.p);
@@ -56,7 +56,7 @@ function Chart({ history }: { history: PricePoint[] }) {
         <path d={area} fill="url(#cgrad)" />
         <path d={line} fill="none" stroke={color} strokeWidth={2.4} vectorEffect="non-scaling-stroke" strokeLinecap="round" />
       </svg>
-      <div style={{ display: "flex", justifyContent: "space-between", font: "500 10.5px 'JetBrains Mono'", color: "#A9A2BE", marginTop: 6 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", font: "500 10.5px 'JetBrains Mono'", color: "#9490A8", marginTop: 6 }}>
         <span>{new Date(history[0].t * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
         <span>hi {Math.round(max * 100)}¢ · lo {Math.round(min * 100)}¢</span>
         <span>{new Date(history[history.length - 1].t * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
@@ -72,7 +72,7 @@ function Book({ book }: { book: OrderBook }) {
     <div style={{ position: "relative", display: "flex", justifyContent: "space-between", padding: "4px 8px", font: "500 12px 'JetBrains Mono'", overflow: "hidden", borderRadius: 6 }}>
       <div style={{ position: "absolute", inset: 0, width: (level.size / maxSize * 100) + "%", background: bg }} />
       <span style={{ position: "relative", color }}>{Math.round(level.price * 100)}¢</span>
-      <span style={{ position: "relative", color: "#6E6787" }}>{Math.round(level.size).toLocaleString()}</span>
+      <span style={{ position: "relative", color: "#625E77" }}>{Math.round(level.size).toLocaleString()}</span>
     </div>
   );
   return (
@@ -80,18 +80,18 @@ function Book({ book }: { book: OrderBook }) {
       <div>
         <div style={{ font: "600 10px 'JetBrains Mono'", color: "#0E9160", letterSpacing: "1px", marginBottom: 6 }}>BIDS</div>
         {depth(book.bids).map((l, i) => <Row key={i} level={l} color="#0E9160" bg="rgba(23,184,119,.1)" />)}
-        {!book.bids.length && <div style={{ color: "#A9A2BE", fontSize: 12 }}>—</div>}
+        {!book.bids.length && <div style={{ color: "#9490A8", fontSize: 12 }}>—</div>}
       </div>
       <div>
         <div style={{ font: "600 10px 'JetBrains Mono'", color: "#D4491F", letterSpacing: "1px", marginBottom: 6 }}>ASKS</div>
         {depth(book.asks).map((l, i) => <Row key={i} level={l} color="#D4491F" bg="rgba(244,99,58,.1)" />)}
-        {!book.asks.length && <div style={{ color: "#A9A2BE", fontSize: 12 }}>—</div>}
+        {!book.asks.length && <div style={{ color: "#9490A8", fontSize: 12 }}>—</div>}
       </div>
     </div>
   );
 }
 
-const card = { background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: 16, padding: 20 };
+const card = { background: "#fff", border: "1px solid rgba(130,0,255,.08)", borderRadius: 16, padding: 20 };
 
 export default function MarketDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -185,7 +185,7 @@ export default function MarketDetailPage() {
   }, [watchItem?.above, watchItem?.below]);
 
   const shell = (children: React.ReactNode) => (
-    <div style={{ minHeight: "100vh", background: "#FFFBF7", color: "#1D1832", fontFamily: "'Instrument Sans',sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#F8F8FA", color: "#120F24", fontFamily: "'Instrument Sans',sans-serif" }}>
       <Ticker /><Navbar />
       <div style={{ maxWidth: 1180, margin: "0 auto", padding: "40px 32px 96px" }}>{children}</div>
       <Footer />
@@ -193,7 +193,7 @@ export default function MarketDetailPage() {
   );
 
   if (error) return shell(<div style={{ color: "#D4491F" }}>{error} <Link href="/markets">← Back to markets</Link></div>);
-  if (!event) return shell(<div style={{ color: "#A9A2BE", font: "500 13px 'JetBrains Mono'" }}>Loading market…</div>);
+  if (!event) return shell(<div style={{ color: "#9490A8", font: "500 13px 'JetBrains Mono'" }}>Loading market…</div>);
 
   return shell(
     <>
@@ -202,7 +202,7 @@ export default function MarketDetailPage() {
         {event.image && <img src={event.image} alt="" width={56} height={56} style={{ borderRadius: 14, objectFit: "cover" }} />}
         <div style={{ flex: 1 }}>
           <h1 style={{ margin: 0, font: "800 28px/1.15 'Bricolage Grotesque'", letterSpacing: "-1px" }}>{event.title}</h1>
-          <div style={{ display: "flex", gap: 14, marginTop: 8, font: "500 12px 'JetBrains Mono'", color: "#A9A2BE", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 14, marginTop: 8, font: "500 12px 'JetBrains Mono'", color: "#9490A8", flexWrap: "wrap" }}>
             <span>{fmtUsd(event.volume24hr)} · 24h vol</span>
             <span>{fmtUsd(event.liquidity)} liquidity</span>
             <span>ends {fmtDate(event.endDate)}</span>
@@ -217,19 +217,19 @@ export default function MarketDetailPage() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
               <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
                 <span style={{ font: "600 34px 'JetBrains Mono'", letterSpacing: "-2px", color: "#0E9160" }}>{fmtCents(market?.yesPrice ?? null)}</span>
-                <span style={{ font: "600 13px 'Instrument Sans'", color: "#6E6787" }}>{event.binary ? "YES" : market?.groupItemTitle}</span>
+                <span style={{ font: "600 13px 'Instrument Sans'", color: "#625E77" }}>{event.binary ? "YES" : market?.groupItemTitle}</span>
               </div>
               <div style={{ display: "flex", gap: 6 }}>
                 {INTERVALS.map(([label, val]) => (
                   <button key={val} onClick={() => setInterval_(val)}
-                    style={{ background: interval_ === val ? "rgba(240,86,140,.12)" : "transparent", border: "none", color: interval_ === val ? "#D6336C" : "#A9A2BE", font: "600 11px 'JetBrains Mono'", padding: "5px 11px", borderRadius: 999, cursor: "pointer" }}>
+                    style={{ background: interval_ === val ? "rgba(130,0,255,.12)" : "transparent", border: "none", color: interval_ === val ? "#8200FF" : "#9490A8", font: "600 11px 'JetBrains Mono'", padding: "5px 11px", borderRadius: 999, cursor: "pointer" }}>
                     {label}
                   </button>
                 ))}
               </div>
             </div>
             {history === null
-              ? <div style={{ height: 220, display: "flex", alignItems: "center", justifyContent: "center", color: "#A9A2BE", font: "500 12px 'JetBrains Mono'" }}>Loading chart…</div>
+              ? <div style={{ height: 220, display: "flex", alignItems: "center", justifyContent: "center", color: "#9490A8", font: "500 12px 'JetBrains Mono'" }}>Loading chart…</div>
               : <Chart history={history} />}
           </div>
 
@@ -237,11 +237,11 @@ export default function MarketDetailPage() {
             <div style={{ ...card, padding: 12 }}>
               {event.markets.map((m, i) => (
                 <button key={m.id} onClick={() => setSel(i)}
-                  style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, background: sel === i ? "rgba(240,86,140,.07)" : "transparent", border: "none", borderRadius: 10, padding: "10px 12px", cursor: "pointer", textAlign: "left" }}>
-                  <span style={{ font: "600 14px 'Instrument Sans'", color: "#1D1832" }}>{m.groupItemTitle}</span>
+                  style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, background: sel === i ? "rgba(130,0,255,.07)" : "transparent", border: "none", borderRadius: 10, padding: "10px 12px", cursor: "pointer", textAlign: "left" }}>
+                  <span style={{ font: "600 14px 'Instrument Sans'", color: "#120F24" }}>{m.groupItemTitle}</span>
                   <span style={{ display: "flex", gap: 12, font: "600 13px 'JetBrains Mono'" }}>
                     <span style={{ color: "#0E9160" }}>YES {fmtCents(m.yesPrice)}</span>
-                    <span style={{ color: "#A9A2BE" }}>NO {fmtCents(m.yesPrice != null ? 1 - m.yesPrice : null)}</span>
+                    <span style={{ color: "#9490A8" }}>NO {fmtCents(m.yesPrice != null ? 1 - m.yesPrice : null)}</span>
                   </span>
                 </button>
               ))}
@@ -251,7 +251,7 @@ export default function MarketDetailPage() {
           {event.description && (
             <div style={card}>
               <div style={{ font: "700 15px 'Bricolage Grotesque'", marginBottom: 8 }}>Resolution</div>
-              <div style={{ color: "#6E6787", fontSize: 13.5, lineHeight: 1.65, whiteSpace: "pre-wrap" }}>
+              <div style={{ color: "#625E77", fontSize: 13.5, lineHeight: 1.65, whiteSpace: "pre-wrap" }}>
                 {event.description.length > 900 ? event.description.slice(0, 900) + "…" : event.description}
               </div>
             </div>
@@ -262,7 +262,7 @@ export default function MarketDetailPage() {
           <div style={card}>
             <div style={{ font: "700 15px 'Bricolage Grotesque'", marginBottom: 12 }}>Order book · {event.binary ? "YES" : market?.groupItemTitle}</div>
             <Book book={book} />
-            <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px dashed rgba(29,24,50,.1)", display: "flex", justifyContent: "space-between", font: "500 11.5px 'JetBrains Mono'", color: "#A9A2BE" }}>
+            <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px dashed rgba(130,0,255,.1)", display: "flex", justifyContent: "space-between", font: "500 11.5px 'JetBrains Mono'", color: "#9490A8" }}>
               <span>bid {market?.bestBid != null ? fmtCents(market.bestBid) : "—"}</span>
               <span>ask {market?.bestAsk != null ? fmtCents(market.bestAsk) : "—"}</span>
             </div>
@@ -270,17 +270,17 @@ export default function MarketDetailPage() {
 
           <div style={card}>
             <div style={{ font: "700 15px 'Bricolage Grotesque'", marginBottom: 4 }}>Price alert</div>
-            <div style={{ color: "#6E6787", fontSize: 12.5, marginBottom: 12 }}>
+            <div style={{ color: "#625E77", fontSize: 12.5, marginBottom: 12 }}>
               {watched ? "Notify when YES crosses a threshold (while the app is open)." : "Add to watchlist to set alerts."}
             </div>
             <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
               <input value={above} onChange={(e) => setAbove(e.target.value.replace(/\D/g, ""))} placeholder="above ¢" disabled={!watched}
-                style={{ width: 82, background: "#FFFBF7", border: "1px solid rgba(29,24,50,.12)", borderRadius: 9, padding: "9px 12px", font: "500 13px 'JetBrains Mono'", outline: "none" }} />
+                style={{ width: 82, background: "#F8F8FA", border: "1px solid rgba(130,0,255,.12)", borderRadius: 9, padding: "9px 12px", font: "500 13px 'JetBrains Mono'", outline: "none" }} />
               <input value={below} onChange={(e) => setBelow(e.target.value.replace(/\D/g, ""))} placeholder="below ¢" disabled={!watched}
-                style={{ width: 82, background: "#FFFBF7", border: "1px solid rgba(29,24,50,.12)", borderRadius: 9, padding: "9px 12px", font: "500 13px 'JetBrains Mono'", outline: "none" }} />
+                style={{ width: 82, background: "#F8F8FA", border: "1px solid rgba(130,0,255,.12)", borderRadius: 9, padding: "9px 12px", font: "500 13px 'JetBrains Mono'", outline: "none" }} />
               <button disabled={!watched || !event}
                 onClick={() => event && setAlert(String(event.id), above ? Number(above) / 100 : null, below ? Number(below) / 100 : null)}
-                style={{ background: "#1D1633", border: "none", color: "#fff", font: "600 12.5px 'Instrument Sans'", padding: "9px 16px", borderRadius: 999, cursor: watched ? "pointer" : "default", opacity: watched ? 1 : .4 }}>
+                style={{ background: "#120F24", border: "none", color: "#fff", font: "600 12.5px 'Instrument Sans'", padding: "9px 16px", borderRadius: 999, cursor: watched ? "pointer" : "default", opacity: watched ? 1 : .4 }}>
                 Save
               </button>
             </div>

@@ -13,23 +13,23 @@ const aboutStats = [
 ];
 
 const values = [
-  { n: "01", bg: "rgba(240,86,140,.12)", color: "#D6336C", title: "The price is the product", body: "Every feature exists to make prediction market prices more accurate, more liquid, and more available." },
+  { n: "01", bg: "rgba(130,0,255,.12)", color: "#8200FF", title: "The price is the product", body: "Every feature exists to make prediction market prices more accurate, more liquid, and more available." },
   { n: "02", bg: "rgba(23,184,119,.12)", color: "#0E9160", title: "Compliance is a feature", body: "We treat regulation as a design constraint, not an obstacle. Shield exists so our customers sleep." },
   { n: "03", bg: "rgba(122,69,153,.12)", color: "#7A4599", title: "Reliability is the brand", body: "Settlement infrastructure earns trust in years and loses it in seconds. We engineer for the worst day, not the demo." },
 ];
 
 export default function About() {
   return (
-    <div style={{ minHeight: "100vh", background: "#FFFBF7", color: "#1D1832", fontFamily: "'Instrument Sans',sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#F8F8FA", color: "#120F24", fontFamily: "'Instrument Sans',sans-serif" }}>
       <Ticker />
       <Navbar />
 
       <div data-screen-label="About" style={{ maxWidth: "1180px", margin: "0 auto", padding: "72px 32px 96px" }}>
         <div style={{ maxWidth: "680px" }}>
-          <div style={{ font: "600 12.5px 'JetBrains Mono',monospace", color: "#D6336C", letterSpacing: "1.6px", marginBottom: "16px" }}>ABOUT</div>
+          <div style={{ font: "600 12.5px 'JetBrains Mono',monospace", color: "#8200FF", letterSpacing: "1.6px", marginBottom: "16px" }}>ABOUT</div>
           <h1 style={{ margin: "0 0 20px", font: "800 50px/1.04 'Bricolage Grotesque',sans-serif", letterSpacing: "-2.2px", textWrap: "pretty" }}>The price of a belief should be a public good</h1>
-          <p style={{ color: "#6E6787", fontSize: "17.5px", lineHeight: "1.65", margin: "0 0 12px" }}>Markets are the most reliable forecasting instruments available — but operating one carries significant regulatory, financial, and engineering complexity. Probable exists to make launching a prediction market as straightforward as accepting a card payment.</p>
-          <p style={{ color: "#6E6787", fontSize: "17.5px", lineHeight: "1.65", margin: 0 }}>Our rails settle prediction market volumes directly on Polygon mainnet — utilizing non-custodial wallet infrastructure, automated token allowances, and regulatory-compliant rails.</p>
+          <p style={{ color: "#625E77", fontSize: "17.5px", lineHeight: "1.65", margin: "0 0 12px" }}>Markets are the most reliable forecasting instruments available — but operating one carries significant regulatory, financial, and engineering complexity. Probable exists to make launching a prediction market as straightforward as accepting a card payment.</p>
+          <p style={{ color: "#625E77", fontSize: "17.5px", lineHeight: "1.65", margin: 0 }}>Our rails settle prediction market volumes directly on Polygon mainnet — utilizing non-custodial wallet infrastructure, automated token allowances, and regulatory-compliant rails.</p>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "16px", margin: "56px 0" }}>
@@ -50,7 +50,7 @@ export default function About() {
                   <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: v.bg, display: "flex", alignItems: "center", justifyContent: "center", font: "700 15px 'JetBrains Mono',monospace", color: v.color, flex: "none" }}>{v.n}</div>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: "16.5px", marginBottom: "5px" }}>{v.title}</div>
-                    <div style={{ color: "#6E6787", fontSize: "14.5px", lineHeight: "1.6" }}>{v.body}</div>
+                    <div style={{ color: "#625E77", fontSize: "14.5px", lineHeight: "1.6" }}>{v.body}</div>
                   </div>
                 </div>
               ))}
@@ -58,14 +58,14 @@ export default function About() {
           </div>
           <div id="careers">
             <h2 style={{ margin: "0 0 24px", font: "800 32px 'Bricolage Grotesque',sans-serif", letterSpacing: "-1.2px" }}>Careers</h2>
-            <div style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "16px", padding: "28px", lineHeight: 1.6 }}>
-              <p style={{ margin: "0 0 16px", fontSize: "14.5px", color: "#6E6787" }}>
+            <div style={{ background: "#fff", border: "1px solid rgba(130,0,255,.08)", borderRadius: "16px", padding: "28px", lineHeight: 1.6 }}>
+              <p style={{ margin: "0 0 16px", fontSize: "14.5px", color: "#625E77" }}>
                 We are a lean, remote-first team building the next generation of settlement and compliance infrastructure for prediction markets. We write TypeScript, Go, Solidity, and manage RPC nodes.
               </p>
-              <p style={{ margin: "0 0 20px", fontSize: "14.5px", color: "#6E6787" }}>
+              <p style={{ margin: "0 0 20px", fontSize: "14.5px", color: "#625E77" }}>
                 We hire opportunistically for exceptional engineers and designers who enjoy working at the intersection of DeFi protocols and API infrastructure.
               </p>
-              <a href="mailto:team@probable.xyz" style={{ display: "inline-block", background: "#1D1633", color: "#fff", textDecoration: "none", font: "700 14px 'Instrument Sans'", padding: "12px 24px", borderRadius: "10px", transition: "opacity 0.2s" }}>
+              <a href="mailto:team@probable.xyz" style={{ display: "inline-block", background: "#120F24", color: "#fff", textDecoration: "none", font: "700 14px 'Instrument Sans'", padding: "12px 24px", borderRadius: "10px", transition: "opacity 0.2s" }}>
                 Get in touch →
               </a>
             </div>

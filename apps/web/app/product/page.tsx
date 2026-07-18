@@ -9,8 +9,8 @@ import { API_BASE_URL } from "../../lib/config";
 const productBlocks = [
   {
     tag: "RAILS",
-    tagColor: "#D6336C",
-    tagBg: "rgba(255,143,181,.15)",
+    tagColor: "#8200FF",
+    tagBg: "rgba(130,0,255,.15)",
     title: "Instant Fiat & Crypto Settlement",
     body: "Eliminate gas fees and crypto complexities. Fund accounts directly via standard card checkout or USDC transfers, and resolve payouts instantly.",
     points: [
@@ -23,7 +23,7 @@ const productBlocks = [
   {
     tag: "EMBEDS",
     tagColor: "#0E9160",
-    tagBg: "rgba(58,223,165,.15)",
+    tagBg: "rgba(255,92,35,.15)",
     title: "Beautiful, Reactive Market Embeds",
     body: "Drop responsive prediction cards directly into your news feeds or trading interfaces. Custom stylesheet overrides let you align it with your brand identity.",
     points: [
@@ -31,7 +31,7 @@ const productBlocks = [
       "Auto-updating WebSockets quote streams",
       "Zero React wrapper boilerplate required"
     ],
-    snippet: `<probable-embed\n  market-id="mkt_btc_150k"\n  theme="dark"\n  accent="#F0568C"\n/>`
+    snippet: `<probable-embed\n  market-id="mkt_btc_150k"\n  theme="dark"\n  accent="#8200FF"\n/>`
   },
   {
     tag: "SHIELD",
@@ -49,15 +49,15 @@ const productBlocks = [
 ];
 
 const useCases = [
-  { k: "FINTECH", kColor: "#D6336C", title: "Asset Hedging", body: "Let users purchase options or hedge holdings against real-world event occurrences directly in your dashboard." },
+  { k: "FINTECH", kColor: "#8200FF", title: "Asset Hedging", body: "Let users purchase options or hedge holdings against real-world event occurrences directly in your dashboard." },
   { k: "MEDIA", kColor: "#0E9160", title: "Stake Polls", body: "Turn static readership polls into active financial predictions. Boost reader interaction by 4.2x." },
   { k: "GAMING", kColor: "#D4491F", title: "Interactive Esports", body: "Allow viewers to forecast game outcomes and player statistics live with gasless sub-second payouts." },
 ];
 
 const tiers = [
-  { name: "Sandbox", desc: "Build prototypes, evaluate endpoints, and simulate real-time settlement.", rate: "0%", unit: "fees", feats: ["100 transactions/mo", "API key access", "Community support"], btnBg: "none", btnBorder: "rgba(29,24,50,.14)", btnColor: "#1D1832", cta: "Start testing", popular: false, bg: "#fff", border: "rgba(29,24,50,.08)", ink: "#1D1832", muted: "#6E6787", featColor: "#4A4363" },
-  { name: "Scale", desc: "For scaling production apps requiring full trading capabilities and streaming.", rate: "0.5%", unit: "per trade", feats: ["Unlimited trades", "WebSockets quote stream", "Anti-wash shield checks", "Email support"], btnBg: "#1D1633", btnBorder: "none", btnColor: "#fff", cta: "Upgrade now", popular: true, bg: "#fff", border: "rgba(240,86,140,.45)", ink: "#1D1832", muted: "#6E6787", featColor: "#4A4363" },
-  { name: "Platform", desc: "Custom features, dedicated nodes, and enterprise compliance gating.", rate: "Custom", unit: "volume pricing", feats: ["Dedicated RPC channels", "White-glove payment setups", "SLA support channel", "Compliance auditing"], btnBg: "none", btnBorder: "rgba(29,24,50,.14)", btnColor: "#1D1832", cta: "Contact sales", popular: false, bg: "#fff", border: "rgba(29,24,50,.08)", ink: "#1D1832", muted: "#6E6787", featColor: "#4A4363" }
+  { name: "Sandbox", desc: "Build prototypes, evaluate endpoints, and simulate real-time settlement.", rate: "0%", unit: "fees", feats: ["100 transactions/mo", "API key access", "Community support"], btnBg: "none", btnBorder: "rgba(130,0,255,.14)", btnColor: "#120F24", cta: "Start testing", popular: false, bg: "#fff", border: "rgba(130,0,255,.08)", ink: "#120F24", muted: "#625E77", featColor: "#4A4363" },
+  { name: "Scale", desc: "For scaling production apps requiring full trading capabilities and streaming.", rate: "0.5%", unit: "per trade", feats: ["Unlimited trades", "WebSockets quote stream", "Anti-wash shield checks", "Email support"], btnBg: "#120F24", btnBorder: "none", btnColor: "#fff", cta: "Upgrade now", popular: true, bg: "#fff", border: "rgba(130,0,255,.45)", ink: "#120F24", muted: "#625E77", featColor: "#4A4363" },
+  { name: "Platform", desc: "Custom features, dedicated nodes, and enterprise compliance gating.", rate: "Custom", unit: "volume pricing", feats: ["Dedicated RPC channels", "White-glove payment setups", "SLA support channel", "Compliance auditing"], btnBg: "none", btnBorder: "rgba(130,0,255,.14)", btnColor: "#120F24", cta: "Contact sales", popular: false, bg: "#fff", border: "rgba(130,0,255,.08)", ink: "#120F24", muted: "#625E77", featColor: "#4A4363" }
 ];
 
 export default function Product() {
@@ -97,22 +97,22 @@ export default function Product() {
   const monthlyFee = (volumeAmount * (rate / 100)).toFixed(0);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#FFFBF7", color: "#1D1832", fontFamily: "'Instrument Sans',sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#F8F8FA", color: "#120F24", fontFamily: "'Instrument Sans',sans-serif" }}>
       <Ticker />
       <Navbar />
 
       <div data-screen-label="Product" style={{ maxWidth: "1180px", margin: "0 auto", padding: "72px 32px 96px" }}>
-        <div style={{ font: "600 12.5px 'JetBrains Mono',monospace", color: "#D6336C", letterSpacing: "1.6px", marginBottom: "16px" }}>PRODUCT</div>
+        <div style={{ font: "600 12.5px 'JetBrains Mono',monospace", color: "#8200FF", letterSpacing: "1.6px", marginBottom: "16px" }}>PRODUCT</div>
         <h1 style={{ margin: "0 0 14px", font: "800 50px/1.02 'Bricolage Grotesque',sans-serif", letterSpacing: "-2.2px" }}>One API, three primitives</h1>
-        <p style={{ color: "#6E6787", fontSize: "17px", maxWidth: "560px", lineHeight: "1.6", margin: "0 0 56px" }}>Compose Rails, Embeds, and Shield into any prediction-market experience.</p>
+        <p style={{ color: "#625E77", fontSize: "17px", maxWidth: "560px", lineHeight: "1.6", margin: "0 0 56px" }}>Compose Rails, Embeds, and Shield into any prediction-market experience.</p>
         
         <div style={{ display: "flex", flexDirection: "column", gap: "22px" }}>
           {productBlocks.map((p, i) => (
-            <div key={i} id={p.tag.toLowerCase()} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "44px", background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "20px", padding: "42px", alignItems: "center" }}>
+            <div key={i} id={p.tag.toLowerCase()} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "44px", background: "#fff", border: "1px solid rgba(130,0,255,.08)", borderRadius: "20px", padding: "42px", alignItems: "center" }}>
               <div>
                 <div style={{ display: "inline-block", font: "600 11px 'JetBrains Mono',monospace", color: p.tagColor, background: p.tagBg, borderRadius: "999px", padding: "5px 13px", marginBottom: "18px", letterSpacing: ".6px" }}>{p.tag}</div>
                 <div style={{ font: "700 27px 'Bricolage Grotesque',sans-serif", letterSpacing: "-.8px", marginBottom: "12px" }}>{p.title}</div>
-                <div style={{ color: "#6E6787", fontSize: "15.5px", lineHeight: "1.65", marginBottom: "22px" }}>{p.body}</div>
+                <div style={{ color: "#625E77", fontSize: "15.5px", lineHeight: "1.65", marginBottom: "22px" }}>{p.body}</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                   {p.points.map((pt, j) => (
                     <div key={j} style={{ display: "flex", gap: "10px", alignItems: "center", fontSize: "14.5px", color: "#4A4363" }}>
@@ -121,7 +121,7 @@ export default function Product() {
                   ))}
                 </div>
               </div>
-              <div style={{ background: "#1D1633", borderRadius: "15px", padding: "22px 24px", font: "500 12.5px/1.75 'JetBrains Mono',monospace", color: "#B9AEDB", whiteSpace: "pre-wrap" }}>{p.snippet}</div>
+              <div style={{ background: "#120F24", borderRadius: "15px", padding: "22px 24px", font: "500 12.5px/1.75 'JetBrains Mono',monospace", color: "#B3A8D9", whiteSpace: "pre-wrap" }}>{p.snippet}</div>
             </div>
           ))}
         </div>
@@ -132,10 +132,10 @@ export default function Product() {
           <h2 style={{ margin: "0 0 40px", font: "800 38px/1.06 'Bricolage Grotesque',sans-serif", letterSpacing: "-1.5px" }}>Who builds on Probable</h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
             {useCases.map((u, i) => (
-              <div key={i} style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "18px", padding: "28px", cursor: "pointer" }}>
+              <div key={i} style={{ background: "#fff", border: "1px solid rgba(130,0,255,.08)", borderRadius: "18px", padding: "28px", cursor: "pointer" }}>
                 <div style={{ font: "600 12px 'JetBrains Mono',monospace", color: u.kColor, marginBottom: "12px", letterSpacing: ".8px" }}>{u.k}</div>
                 <div style={{ font: "700 18.5px 'Bricolage Grotesque',sans-serif", marginBottom: "9px", letterSpacing: "-.3px" }}>{u.title}</div>
-                <div style={{ color: "#6E6787", fontSize: "14px", lineHeight: "1.62" }}>{u.body}</div>
+                <div style={{ color: "#625E77", fontSize: "14px", lineHeight: "1.62" }}>{u.body}</div>
               </div>
             ))}
           </div>
@@ -144,16 +144,16 @@ export default function Product() {
         {/* PRICING */}
         <div id="pricing" style={{ marginTop: "120px" }}>
           <div style={{ textAlign: "center", marginBottom: "56px" }}>
-            <div style={{ font: "600 12.5px 'JetBrains Mono',monospace", color: "#D6336C", letterSpacing: "1.6px", marginBottom: "16px" }}>PRICING</div>
+            <div style={{ font: "600 12.5px 'JetBrains Mono',monospace", color: "#8200FF", letterSpacing: "1.6px", marginBottom: "16px" }}>PRICING</div>
             <h1 style={{ margin: "0 0 14px", font: "800 50px/1.02 'Bricolage Grotesque',sans-serif", letterSpacing: "-2.2px" }}>Pay per settled dollar</h1>
-            <p style={{ color: "#6E6787", fontSize: "17px", margin: 0 }}>No monthly fees. No minimums. Volume discounts built in.</p>
+            <p style={{ color: "#625E77", fontSize: "17px", margin: 0 }}>No monthly fees. No minimums. Volume discounts built in.</p>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px", marginBottom: "64px", alignItems: "start" }}>
             {tiers.map((t, i) => (
               <div key={i} style={{ background: t.bg, border: `1.5px solid ${t.border}`, borderRadius: "20px", padding: "34px", position: "relative", cursor: "pointer" }}>
                 {t.popular && (
-                  <div style={{ position: "absolute", top: "-13px", left: "50%", transform: "translateX(-50%)", background: "#F0568C", color: "#fff", font: "700 10.5px 'JetBrains Mono',monospace", padding: "5px 14px", borderRadius: "999px", letterSpacing: ".8px" }}>MOST POPULAR</div>
+                  <div style={{ position: "absolute", top: "-13px", left: "50%", transform: "translateX(-50%)", background: "#8200FF", color: "#fff", font: "700 10.5px 'JetBrains Mono',monospace", padding: "5px 14px", borderRadius: "999px", letterSpacing: ".8px" }}>MOST POPULAR</div>
                 )}
                 <div style={{ font: "700 21px 'Bricolage Grotesque',sans-serif", marginBottom: "6px", color: t.ink }}>{t.name}</div>
                 <div style={{ color: t.muted, fontSize: "13.5px", marginBottom: "22px", minHeight: "36px", lineHeight: "1.45" }}>{t.desc}</div>
@@ -174,9 +174,9 @@ export default function Product() {
           </div>
 
           {/* FEE CALCULATOR */}
-          <div style={{ maxWidth: "780px", margin: "0 auto", background: "#fff", border: "1px solid rgba(29,24,50,.09)", borderRadius: "20px", padding: "38px", boxShadow: "0 16px 44px rgba(74,42,90,.08)" }}>
+          <div style={{ maxWidth: "780px", margin: "0 auto", background: "#fff", border: "1px solid rgba(130,0,255,.09)", borderRadius: "20px", padding: "38px", boxShadow: "0 16px 44px rgba(18,15,36,.08)" }}>
             <div style={{ font: "700 23px 'Bricolage Grotesque',sans-serif", letterSpacing: "-.5px", marginBottom: "6px" }}>Estimate your fees</div>
-            <div style={{ color: "#6E6787", fontSize: "14px", marginBottom: "30px" }}>Drag to your expected monthly settled volume.</div>
+            <div style={{ color: "#625E77", fontSize: "14px", marginBottom: "30px" }}>Drag to your expected monthly settled volume.</div>
             
             <input 
               type="range" 
@@ -188,13 +188,13 @@ export default function Product() {
             />
             
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: "28px", gap: "16px" }}>
-              <div style={{ flex: 1, background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "14px", padding: "18px 20px" }}>
-                <div style={{ font: "600 10.5px 'JetBrains Mono',monospace", color: "#A9A2BE", letterSpacing: "1px", marginBottom: "7px" }}>MONTHLY VOLUME</div>
+              <div style={{ flex: 1, background: "#F8F8FA", border: "1px solid rgba(130,0,255,.08)", borderRadius: "14px", padding: "18px 20px" }}>
+                <div style={{ font: "600 10.5px 'JetBrains Mono',monospace", color: "#9490A8", letterSpacing: "1px", marginBottom: "7px" }}>MONTHLY VOLUME</div>
                 <div style={{ font: "600 26px 'JetBrains Mono',monospace", letterSpacing: "-1.5px" }}>${volumeAmount.toLocaleString()}</div>
               </div>
-              <div style={{ flex: 1, background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "14px", padding: "18px 20px" }}>
-                <div style={{ font: "600 10.5px 'JetBrains Mono',monospace", color: "#A9A2BE", letterSpacing: "1px", marginBottom: "7px" }}>YOUR RATE</div>
-                <div style={{ font: "600 26px 'JetBrains Mono',monospace", letterSpacing: "-1.5px", color: "#D6336C" }}>{rate.toFixed(1)}%</div>
+              <div style={{ flex: 1, background: "#F8F8FA", border: "1px solid rgba(130,0,255,.08)", borderRadius: "14px", padding: "18px 20px" }}>
+                <div style={{ font: "600 10.5px 'JetBrains Mono',monospace", color: "#9490A8", letterSpacing: "1px", marginBottom: "7px" }}>YOUR RATE</div>
+                <div style={{ font: "600 26px 'JetBrains Mono',monospace", letterSpacing: "-1.5px", color: "#8200FF" }}>{rate.toFixed(1)}%</div>
               </div>
               <div style={{ flex: 1, background: "rgba(23,184,119,.07)", border: "1px solid rgba(23,184,119,.3)", borderRadius: "14px", padding: "18px 20px" }}>
                 <div style={{ font: "600 10.5px 'JetBrains Mono',monospace", color: "#0E9160", letterSpacing: "1px", marginBottom: "7px" }}>EST. MONTHLY FEE</div>
