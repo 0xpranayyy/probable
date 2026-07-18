@@ -231,27 +231,24 @@ app.post('/v1/trades', authMiddleware, async (c) => {
     walletAddress: wallet.address
   })
 
-  // 5. Dispatch Webhook
+  // 5. Dispatch webhook (real HTTP POST — logs the actual outcome, not an assumed one)
   if (body.webhookUrl) {
-    let statusCode = 200
-    try {
-      await NotificationService.sendWebhook(body.webhookUrl, "trade.executed", {
-        orderId: dbOrder.id,
-        marketId,
-        type,
-        amount,
-        walletAddress: wallet.address,
-        jobId: job.id
-      })
-    } catch (e) {
-      statusCode = 500
-    }
+    const result = await NotificationService.sendWebhook(body.webhookUrl, "trade.executed", {
+      orderId: dbOrder.id,
+      marketId,
+      type,
+      amount,
+      walletAddress: wallet.address,
+      jobId: job.id
+    })
     webhookLogs.push({
       id: `wh_${Math.random().toString(36).substring(2, 10)}`,
       url: body.webhookUrl,
       event: "trade.executed",
-      statusCode,
-      timestamp: new Date().toISOString(),
+      statusCode: result.httpStatus,
+      dispatched: result.dispatched,
+      error: result.error ?? null,
+      timestamp: result.timestamp,
       payload: { orderId: dbOrder.id, marketId, type, amount }
     })
   }
@@ -281,7 +278,7 @@ app.get('/v1/polyscore', authMiddleware, async (c) => {
     return c.json({ error: "Missing required query parameter: userId" }, 400)
   }
 
-  const scoreDetails = PolyScoreService.getUserScore(userId)
+  const scoreDetails = await PolyScoreService.getUserScore(userId)
   return c.json(scoreDetails)
 })
 

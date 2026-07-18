@@ -1,6 +1,6 @@
 datasource db {
-  provider = "sqlite"
-  url      = "file:../dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
@@ -48,6 +48,7 @@ model Market {
   creatorId String
   creator   User     @relation(fields: [creatorId], references: [id])
   status    String   @default("OPEN") // OPEN, RESOLVED, CANCELED
+  outcome   Boolean? // true = YES won, false = NO won, null = not yet resolved. Nothing sets this yet — no resolver is built.
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   Orders    Order[]
