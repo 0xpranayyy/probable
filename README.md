@@ -88,21 +88,6 @@ flowchart LR
 
 ---
 
-## 📈 PolyScore Predictive Ranks
-
-PolyScore evaluates the forecasting quality of developer accounts using **Brier scoring models**:
-
-$$BS = \frac{1}{N} \sum_{t=1}^{N} (f_t - o_t)^2$$
-
-Where:
-* $N$ is the number of resolved prediction choices evaluated.
-* $f_t$ is the forecast price (predicted probability) placed by the user.
-* $o_t$ is the actual resolution outcome ($1$ for YES, $0$ for NO).
-
-Scores are normalized between $0\%$ and $100\%$ and mapped to EXPERT, ADVANCED, or INTERMEDIATE reliability grades.
-
----
-
 ## 💻 Getting Started
 
 ### 📋 Prerequisites

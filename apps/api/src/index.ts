@@ -11,7 +11,6 @@ import { LiveMarketsService } from './services/polymarketLive'
 import { PolymarketTradingService } from './services/polymarketTrading'
 import { RealtimeService } from './services/realtime'
 import { AiService } from './services/ai'
-import { PolyScoreService } from './services/polyscore'
 import { NotificationService } from './services/notifications'
 import { QueueService } from './services/queue'
 
@@ -289,20 +288,6 @@ app.post('/v1/ai/draft-market', authMiddleware, async (c) => {
   return c.json(draft)
 })
 
-app.get('/v1/polyscore', authMiddleware, async (c) => {
-  const userId = c.req.query("userId")
-  if (!userId) {
-    return c.json({ error: "Missing required query parameter: userId" }, 400)
-  }
-
-  const scoreDetails = await PolyScoreService.getUserScore(userId)
-  return c.json(scoreDetails)
-})
-
-app.get('/v1/polyscore/leaderboard', authMiddleware, async (c) => {
-  const leaderboard = await PolyScoreService.getLeaderboard()
-  return c.json(leaderboard)
-})
 
 app.get('/v1/webhooks/logs', authMiddleware, async (c) => {
   const user = c.get('user')

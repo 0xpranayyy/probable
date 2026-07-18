@@ -54,9 +54,6 @@ export default function Dashboard() {
   const [aiPrompt, setAiPrompt] = useState("");
   const [drafting, setDrafting] = useState(false);
 
-  // 3. PolyScore Leaderboard State
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
-
 
 
   const handleGenerateDraft = async () => {
@@ -131,13 +128,6 @@ export default function Dashboard() {
       const logsData = await userSdk.webhooks.listLogs();
       setWebhookLogs(logsData);
 
-      try {
-        const leaderboardData = await userSdk.analytics.getLeaderboard();
-        setLeaderboard(leaderboardData);
-      } catch (err) {
-        console.warn("Failed to fetch PolyScore leaderboard:", err);
-      }
-
 
 
       // Fetch real wallet, allowance, and positions
@@ -172,7 +162,7 @@ export default function Dashboard() {
     }
   }, []);
 
-  const tabs = ["Overview", "Markets", "Payouts", "Compliance", "Real Trading", "Developers", "Leaderboard"];
+  const tabs = ["Overview", "Markets", "Payouts", "Compliance", "Real Trading", "Developers"];
 
   const handleApproveUSDC = async () => {
     if (!token) return;
@@ -810,52 +800,6 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-              </div>
-            )}
-
-            {/* LEADERBOARD TAB */}
-            {activeTab === "Leaderboard" && (
-              <div>
-                <div style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "20px", padding: "32px", marginBottom: "24px" }}>
-                  <h2 style={{ margin: "0 0 8px", font: "800 22px 'Bricolage Grotesque',sans-serif", letterSpacing: "-0.6px" }}>PolyScore Accuracy Leaderboard</h2>
-                  <p style={{ color: "#6E6787", fontSize: "14px", margin: "0 0 28px" }}>
-                    Ranks of market makers and forecasting agents based on Brier scoring models. A score of 100% represents perfect predictive accuracy.
-                  </p>
-
-                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "0.5fr 2fr 1.2fr 1.2fr 1fr", gap: "12px", padding: "10px 24px", font: "600 11px 'JetBrains Mono',monospace", color: "#A9A2BE", letterSpacing: "1px", borderBottom: "1px solid rgba(29,24,50,.07)" }}>
-                      <span>RANK</span>
-                      <span>FORECASTER</span>
-                      <span style={{ textAlign: "right" }}>POLYSCORE</span>
-                      <span style={{ textAlign: "right" }}>TRADES EVALUATED</span>
-                      <span style={{ textAlign: "right" }}>GRADE</span>
-                    </div>
-
-                    {leaderboard.map((player, idx) => {
-                      const rankColor = player.rank === 1 ? "#D4AF37" : player.rank === 2 ? "#C0C0C0" : player.rank === 3 ? "#CD7F32" : "#A9A2BE";
-                      const rankBg = player.rank === 1 ? "rgba(212,175,55,.1)" : player.rank === 2 ? "rgba(192,192,192,.1)" : player.rank === 3 ? "rgba(205,127,50,.1)" : "transparent";
-
-                      return (
-                        <div key={player.userId || idx} style={{ display: "grid", gridTemplateColumns: "0.5fr 2fr 1.2fr 1.2fr 1fr", gap: "12px", padding: "18px 24px", background: "#FFFBF7", border: "1px solid rgba(29,24,50,.07)", borderRadius: "14px", alignItems: "center" }}>
-                          <span style={{ display: "inline-flex", width: "28px", height: "28px", borderRadius: "8px", background: rankBg, color: rankColor, alignItems: "center", justifyContent: "center", font: "700 14px 'JetBrains Mono',monospace" }}>
-                            {player.rank}
-                          </span>
-                          <div>
-                            <span style={{ fontWeight: 700, fontSize: "14.5px", color: "#1D1832" }}>{player.name}</span>
-                            <div style={{ fontSize: "11px", color: "#A9A2BE" }}>{player.email}</div>
-                          </div>
-                          <span style={{ font: "700 16px 'JetBrains Mono',monospace", color: "#1D1832", textAlign: "right" }}>{player.polyScore}%</span>
-                          <span style={{ font: "500 14px 'JetBrains Mono',monospace", color: "#6E6787", textAlign: "right" }}>{player.tradesEvaluated}</span>
-                          <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                            <span style={{ display: "inline-flex", font: "600 10px 'JetBrains Mono',monospace", color: player.grade === "EXPERT" ? "#0E9160" : player.grade === "ADVANCED" ? "#7A4599" : "#D4842A", background: player.grade === "EXPERT" ? "rgba(23,184,119,.1)" : player.grade === "ADVANCED" ? "rgba(122,69,153,.1)" : "rgba(212,132,42,.1)", padding: "4px 10px", borderRadius: "999px" }}>
-                              {player.grade}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
               </div>
             )}
           </>

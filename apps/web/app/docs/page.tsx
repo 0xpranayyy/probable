@@ -77,19 +77,6 @@ const docSections = [
       { name: "question", type: "string", typeColor: "#D6336C", desc: "The market query statement to analyze." }
     ],
     example: `// cURL example\ncurl -X POST http://localhost:3001/v1/predictions \\\n  -H "Authorization: Bearer sk_test_4Jn8Wz1c" \\\n  -d '{"question": "Will OpenAI IPO in 2025?"}'`
-  },
-  {
-    id: "polyscore",
-    group: "ANALYTICS & AI",
-    method: "GET",
-    methodBg: "#4a90e2",
-    path: "/v1/polyscore",
-    title: "PolyScore User Reliability",
-    desc: "Calculates a user's forecast precision index using historical Brier Score calculations.",
-    params: [
-      { name: "userId", type: "string", typeColor: "#D6336C", desc: "Target application user ID." }
-    ],
-    example: `// cURL example\ncurl -G http://localhost:3001/v1/polyscore \\\n  -H "Authorization: Bearer sk_test_4Jn8Wz1c" \\\n  -d "userId=user_981a"`
   }
 ];
 
@@ -153,8 +140,6 @@ export default function Docs() {
           type: (formInputs["type"] || "YES") as any,
           amount: parseFloat(formInputs["amount"]) || 0
         });
-      } else if (activeSection.id === "polyscore") {
-        data = await client.analytics.getPolyScore(formInputs["userId"] || "");
       } else {
         throw new Error(`Unhandled SDK section: ${activeSection.id}`);
       }
@@ -205,11 +190,6 @@ export default function Docs() {
             onClick={() => setActiveSectionId("predictions")}
             style={{ textAlign: "left", background: activeSectionId === "predictions" ? "rgba(29,24,50,.06)" : "transparent", border: "none", color: "#1D1832", font: "600 14px 'Instrument Sans',sans-serif", padding: "9px 14px", borderRadius: "10px", cursor: "pointer", transition: "background .15s" }}>
             AI Forecast
-          </button>
-          <button 
-            onClick={() => setActiveSectionId("polyscore")}
-            style={{ textAlign: "left", background: activeSectionId === "polyscore" ? "rgba(29,24,50,.06)" : "transparent", border: "none", color: "#1D1832", font: "600 14px 'Instrument Sans',sans-serif", padding: "9px 14px", borderRadius: "10px", cursor: "pointer", transition: "background .15s" }}>
-            PolyScore Accuracy
           </button>
 
           <div style={{ marginTop: "22px", background: "linear-gradient(115deg,#FFE3EC,#EFE9FF)", borderRadius: "14px", padding: "18px" }}>
