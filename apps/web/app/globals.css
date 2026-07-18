@@ -1,9 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:ital,wght@0,400..700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
+:root {
+  --primary: #8200FF;
+  --secondary: #FF5C23;
+  --accent-blue: #4914FF;
+  --accent-red: #F7004E;
+  --bg: #F8F8FA;
+  --card-bg: #FFFFFF;
+  --text: #120F24;
+  --text-muted: #625E77;
+  --border: rgba(130, 0, 255, 0.08);
+}
+
 body {
   margin: 0;
-  background: #FFFBF7;
-  color: #1D1832;
+  background: var(--bg);
+  color: var(--text);
   font-family: 'Instrument Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -13,14 +25,16 @@ body {
 }
 
 a {
-  color: #D6336C;
+  color: var(--primary);
   text-decoration: none;
+  transition: opacity 0.2s ease;
 }
 a:hover {
-  color: #A61E4D;
+  opacity: 0.85;
 }
+
 ::selection {
-  background: rgba(240, 86, 140, .22);
+  background: rgba(130, 0, 255, 0.15);
 }
 
 @keyframes pulse {
@@ -35,19 +49,13 @@ a:hover {
   0% { opacity: 0; transform: translateY(16px); }
   100% { opacity: 1; transform: translateY(0); }
 }
-@keyframes drift {
-  0% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(40px, -30px) scale(1.08); }
-  66% { transform: translate(-30px, 20px) scale(.95); }
-  100% { transform: translate(0, 0) scale(1); }
-}
 
 input[type=range] {
   -webkit-appearance: none;
   appearance: none;
   height: 6px;
   border-radius: 3px;
-  background: linear-gradient(90deg, #F0568C var(--fill, 50%), rgba(29, 24, 50, .1) var(--fill, 50%));
+  background: linear-gradient(90deg, var(--primary) var(--fill, 50%), rgba(29, 24, 50, .1) var(--fill, 50%));
   outline: none;
 }
 input[type=range]::-webkit-slider-thumb {
@@ -56,12 +64,12 @@ input[type=range]::-webkit-slider-thumb {
   height: 22px;
   border-radius: 50%;
   background: #fff;
-  border: 6px solid #F0568C;
+  border: 6px solid var(--primary);
   cursor: pointer;
-  box-shadow: 0 2px 12px rgba(240, 86, 140, .4);
+  box-shadow: 0 2px 12px rgba(130, 0, 255, .3);
 }
 
-/* Billion Dollar SF-Agency Design Utilities */
+/* RunPayments inspired layout definitions */
 .grid-2 {
   display: grid !important;
   grid-template-columns: 1.05fr 0.95fr;
@@ -91,11 +99,14 @@ input[type=range]::-webkit-slider-thumb {
 /* Premium Card hover effects */
 .premium-card {
   transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  background: var(--card-bg) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 4px 20px rgba(130, 0, 255, 0.015) !important;
 }
 .premium-card:hover {
   transform: translateY(-4px) !important;
-  box-shadow: 0 22px 50px rgba(29, 22, 51, 0.07) !important;
-  border-color: rgba(240, 86, 140, 0.25) !important;
+  box-shadow: 0 22px 50px rgba(130, 0, 255, 0.06) !important;
+  border-color: rgba(130, 0, 255, 0.2) !important;
 }
 
 .markets-grid {

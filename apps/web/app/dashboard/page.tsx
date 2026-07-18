@@ -65,7 +65,7 @@ export default function Dashboard() {
   // --- NEW FEATURES STATES ---
   // 1. Embed Widget Builder State
   const [embedTheme, setEmbedTheme] = useState("light");
-  const [embedColor, setEmbedColor] = useState("#F0568C");
+  const [embedColor, setEmbedColor] = useState("#8200FF");
   const [embedMarket, setEmbedMarket] = useState("");
   const [embedWidth, setEmbedWidth] = useState("100%");
   const [embedHeight, setEmbedHeight] = useState("360px");
@@ -338,10 +338,10 @@ export default function Dashboard() {
         <Ticker />
         <Navbar />
         <div style={{ maxWidth: "550px", margin: "140px auto 180px", padding: "44px 38px", background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "24px", textAlign: "center", boxShadow: "0 20px 48px rgba(74,42,90,.05)" }}>
-          <div style={{ display: "inline-flex", background: "rgba(240, 86, 140, 0.1)", color: "#F0568C", font: "600 12px 'JetBrains Mono'", padding: "6px 14px", borderRadius: "999px", marginBottom: "22px", letterSpacing: "0.8px" }}>RESTRICTED ACCESS</div>
+          <div style={{ display: "inline-flex", background: "rgba(130, 0, 255, 0.1)", color: "#8200FF", font: "600 12px 'JetBrains Mono'", padding: "6px 14px", borderRadius: "999px", marginBottom: "22px", letterSpacing: "0.8px" }}>RESTRICTED ACCESS</div>
           <h2 style={{ font: "800 28px 'Bricolage Grotesque',sans-serif", margin: "0 0 12px", letterSpacing: "-0.8px" }}>Access Restricted</h2>
           <p style={{ color: "#6E6787", fontSize: "15px", lineHeight: "1.6", margin: "0 0 28px" }}>Please log in to your developer profile using the administrative gateway to access the administrative dashboard, settlement logs, and API metrics.</p>
-          <a href="/auth" style={{ display: "inline-block", background: "#1D1633", color: "#fff", textDecoration: "none", font: "700 14px 'Instrument Sans'", padding: "14px 32px", borderRadius: "12px" }}>Go to gateway</a>
+          <a href="/auth" style={{ display: "inline-block", background: "#120F24", color: "#fff", textDecoration: "none", font: "700 14px 'Instrument Sans'", padding: "14px 32px", borderRadius: "9999px" }}>Go to gateway</a>
         </div>
       </div>
     );
@@ -363,7 +363,7 @@ export default function Dashboard() {
                 <h1 style={{ margin: "0 0 6px", font: "800 36px 'Bricolage Grotesque',sans-serif", letterSpacing: "-1.4px" }}>Developer Dashboard</h1>
                 <div style={{ color: "#6E6787", fontSize: "14.5px" }}>Welcome back, <span style={{ fontWeight: 600, color: "#1D1832" }}>{user?.name || user?.email}</span></div>
               </div>
-              <button onClick={() => setIsModalOpen(true)} style={{ background: "#F0568C", border: "none", color: "#fff", font: "700 13.5px 'Instrument Sans'", padding: "11px 24px", borderRadius: "9999px", cursor: "pointer", transition: "transform 0.15s, opacity 0.15s", boxShadow: "0 4px 14px rgba(240, 86, 140, 0.4)" }} onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.02)"} onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}>+ Deploy New Market</button>
+              <button onClick={() => setIsModalOpen(true)} style={{ background: "#8200FF", border: "none", color: "#fff", font: "700 13.5px 'Instrument Sans'", padding: "11px 24px", borderRadius: "9999px", cursor: "pointer", transition: "transform 0.15s, opacity 0.15s", boxShadow: "0 4px 14px rgba(130, 0, 255, 0.4)" }} onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.02)"} onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}>+ Deploy New Market</button>
             </div>
 
             {/* TAB SELECTOR */}
@@ -438,12 +438,12 @@ export default function Dashboard() {
                         <span style={{ font: "600 11.5px 'JetBrains Mono',monospace", color: "#0E9160", background: "rgba(23,184,119,.1)", padding: "4px 10px", borderRadius: "999px" }}>LIVE DATA</span>
                       </div>
                       <div style={{ height: "180px", display: "flex", alignItems: "flex-end", gap: "12px", borderBottom: "1px solid rgba(29,24,50,.08)", paddingBottom: "10px", marginBottom: "10px" }}>
-                        <div style={{ flex: 1, background: "rgba(240,86,140,.1)", height: "30%", borderRadius: "4px" }}></div>
-                        <div style={{ flex: 1, background: "rgba(240,86,140,.1)", height: "45%", borderRadius: "4px" }}></div>
-                        <div style={{ flex: 1, background: "rgba(240,86,140,.1)", height: "25%", borderRadius: "4px" }}></div>
-                        <div style={{ flex: 1, background: "rgba(240,86,140,.2)", height: "60%", borderRadius: "4px" }}></div>
-                        <div style={{ flex: 1, background: "rgba(240,86,140,.3)", height: "80%", borderRadius: "4px" }}></div>
-                        <div style={{ flex: 1, background: "linear-gradient(to top, #F0568C, #FFC0D3)", height: "95%", borderRadius: "4px" }}></div>
+                        <div style={{ flex: 1, background: "rgba(130,0,255,.1)", height: "30%", borderRadius: "4px" }}></div>
+                        <div style={{ flex: 1, background: "rgba(130,0,255,.1)", height: "45%", borderRadius: "4px" }}></div>
+                        <div style={{ flex: 1, background: "rgba(130,0,255,.1)", height: "25%", borderRadius: "4px" }}></div>
+                        <div style={{ flex: 1, background: "rgba(130,0,255,.2)", height: "60%", borderRadius: "4px" }}></div>
+                        <div style={{ flex: 1, background: "rgba(130,0,255,.3)", height: "80%", borderRadius: "4px" }}></div>
+                        <div style={{ flex: 1, background: "linear-gradient(to top, #8200FF, #EFE9FF)", height: "95%", borderRadius: "4px" }}></div>
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between", font: "500 10.5px 'JetBrains Mono',monospace", color: "#A9A2BE" }}>
                         <span>JUN 18</span><span>JUN 28</span><span>JUL 8</span><span>JUL 18</span>
@@ -515,7 +515,7 @@ export default function Dashboard() {
                       <div key={m.id} style={{ background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "16px", padding: "24px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                         <div>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                            <span style={{ font: "600 10px 'JetBrains Mono',monospace", color: "#F0568C", background: "rgba(240,86,140,.12)", padding: "4px 10px", borderRadius: "999px", letterSpacing: "0.5px" }}>LIVE RESOLUTION</span>
+                            <span style={{ font: "600 10px 'JetBrains Mono',monospace", color: "#8200FF", background: "rgba(130,0,255,.12)", padding: "4px 10px", borderRadius: "999px", letterSpacing: "0.5px" }}>LIVE RESOLUTION</span>
                             <span style={{ fontSize: "11.5px", color: "#A9A2BE" }}>{new Date(m.closesAt).toLocaleDateString()}</span>
                           </div>
                           <h3 style={{ margin: "0 0 16px", font: "700 16.5px/1.3 'Instrument Sans',sans-serif", color: "#1D1832" }}>{m.question}</h3>
@@ -627,7 +627,7 @@ export default function Dashboard() {
                       <div>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "15px" }}>
                           <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#3ADFA5", boxShadow: "0 0 8px #3ADFA5" }}></span>
-                          <span style={{ fontSize: "14px", fontWeight: 600, color: "#1D1633" }}>Connected to Polygon Mainnet</span>
+                          <span style={{ fontSize: "14px", fontWeight: 600, color: "#120F24" }}>Connected to Polygon Mainnet</span>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                           <div style={{ background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "15px" }}>
@@ -660,7 +660,7 @@ export default function Dashboard() {
                         <div style={{ font: "600 16px 'JetBrains Mono',monospace" }}>{allowance !== null ? `${allowance.toFixed(2)} USDC` : "0.00 USDC"}</div>
                       </div>
                       <button onClick={handleApproveUSDC} disabled={approving || !wallet}
-                        style={{ background: "#1D1633", border: "none", color: "#fff", font: "700 13px 'Instrument Sans'", padding: "10px 18px", borderRadius: "10px", cursor: "pointer", opacity: (!wallet || approving) ? 0.6 : 1 }}>
+                        style={{ background: "#120F24", border: "none", color: "#fff", font: "700 13.5px 'Instrument Sans'", padding: "10px 22px", borderRadius: "9999px", cursor: "pointer", opacity: (!wallet || approving) ? 0.6 : 1 }}>
                         {approving ? "Signing..." : "Approve USDC.e"}
                       </button>
                     </div>
@@ -738,7 +738,7 @@ export default function Dashboard() {
                     <div style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "16px", padding: "24px" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
                         <div style={{ font: "700 16px 'Bricolage Grotesque',sans-serif" }}>API Keys</div>
-                        <button onClick={handleCreateKey} style={{ background: "#1D1633", border: "none", color: "#fff", font: "600 12px 'Instrument Sans',sans-serif", padding: "7px 14px", borderRadius: "999px", cursor: "pointer" }}>+ Create Key</button>
+                        <button onClick={handleCreateKey} style={{ background: "#120F24", border: "none", color: "#fff", font: "600 12.5px 'Instrument Sans',sans-serif", padding: "7px 16px", borderRadius: "9999px", cursor: "pointer" }}>+ Create Key</button>
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                         {dbKeys.map((ak, i) => (
@@ -767,7 +767,7 @@ export default function Dashboard() {
                         />
                         <button 
                           onClick={() => alert("Webhook target URL saved!")}
-                          style={{ background: "#1D1633", border: "none", color: "#fff", font: "700 13px 'Instrument Sans'", padding: "0 18px", borderRadius: "10px", cursor: "pointer" }}>
+                          style={{ background: "#120F24", border: "none", color: "#fff", font: "700 13.5px 'Instrument Sans'", padding: "0 22px", borderRadius: "9999px", cursor: "pointer" }}>
                           Save
                         </button>
                       </div>
@@ -837,21 +837,21 @@ export default function Dashboard() {
                             value={embedColor}
                             onChange={(e) => setEmbedColor(e.target.value)}
                             style={{ width: "100%", background: "#FFFBF7", border: "1px solid rgba(29,24,50,.12)", borderRadius: "8px", padding: "8px 12px", fontSize: "13.5px" }}>
-                            <option value="#F0568C">Pink Presets</option>
+                            <option value="#8200FF">Purple Presets (Run)</option>
                             <option value="#0E9160">Green Presets</option>
-                            <option value="#7A4599">Purple Presets</option>
-                            <option value="#1D1633">Dark Presets</option>
+                            <option value="#4914FF">Blue Presets (Partner)</option>
+                            <option value="#120F24">Dark Presets (Developer)</option>
                           </select>
                         </div>
                         <div>
                           <label style={{ fontWeight: 600, fontSize: "12.5px", display: "block", marginBottom: "6px" }}>Color Theme</label>
-                          <div style={{ display: "flex", border: "1px solid rgba(29,24,50,.12)", borderRadius: "8px", overflow: "hidden" }}>
+                          <div style={{ display: "flex", border: "1px solid rgba(29,24,50,.12)", borderRadius: "9999px", overflow: "hidden" }}>
                             <button
                               onClick={() => setEmbedTheme("light")}
-                              style={{ flex: 1, border: "none", background: embedTheme === "light" ? "#1D1633" : "#FFFBF7", color: embedTheme === "light" ? "#fff" : "#1D1832", font: "600 12px 'Instrument Sans'", padding: "8px 0", cursor: "pointer" }}>Light</button>
+                              style={{ flex: 1, border: "none", background: embedTheme === "light" ? "#120F24" : "#FFFBF7", color: embedTheme === "light" ? "#fff" : "#1D1832", font: "600 12px 'Instrument Sans'", padding: "8px 0", cursor: "pointer" }}>Light</button>
                             <button
                               onClick={() => setEmbedTheme("dark")}
-                              style={{ flex: 1, border: "none", background: embedTheme === "dark" ? "#1D1633" : "#fff", color: embedTheme === "dark" ? "#fff" : "#1D1832", font: "600 12px 'Instrument Sans'", padding: "8px 0", cursor: "pointer" }}>Dark</button>
+                              style={{ flex: 1, border: "none", background: embedTheme === "dark" ? "#120F24" : "#fff", color: embedTheme === "dark" ? "#fff" : "#1D1832", font: "600 12px 'Instrument Sans'", padding: "8px 0", cursor: "pointer" }}>Dark</button>
                           </div>
                         </div>
                       </div>
@@ -882,7 +882,7 @@ export default function Dashboard() {
                             navigator.clipboard.writeText(snippet);
                             alert("Copied embed code widget!");
                           }}
-                          style={{ width: "100%", background: "#F0568C", border: "none", color: "#fff", font: "700 13px 'Instrument Sans'", padding: "11px 0", borderRadius: "8px", cursor: "pointer" }}>
+                          style={{ width: "100%", background: "#8200FF", border: "none", color: "#fff", font: "700 13.5px 'Instrument Sans'", padding: "11px 0", borderRadius: "9999px", cursor: "pointer" }}>
                           Copy Embed Snippet
                         </button>
                       </div>
@@ -980,13 +980,13 @@ export default function Dashboard() {
                   type="button"
                   onClick={() => setIsModalOpen(false)}
                   disabled={creatingMarket}
-                  style={{ flex: 1, background: "#FFFBF7", border: "1px solid rgba(29,24,50,.14)", borderRadius: "10px", padding: "12px", font: "700 14px 'Instrument Sans'", cursor: "pointer" }}>
+                  style={{ flex: 1, background: "#FFFBF7", border: "1px solid rgba(29,24,50,.14)", borderRadius: "9999px", padding: "12px", font: "700 14px 'Instrument Sans'", cursor: "pointer" }}>
                   Cancel
                 </button>
                 <button 
                   type="submit"
                   disabled={creatingMarket || !newQuestion}
-                  style={{ flex: 1, background: "#1D1633", color: "#fff", border: "none", borderRadius: "10px", padding: "12px", font: "700 14px 'Instrument Sans'", cursor: "pointer" }}>
+                  style={{ flex: 1, background: "#120F24", color: "#fff", border: "none", borderRadius: "9999px", padding: "12px", font: "700 14px 'Instrument Sans'", cursor: "pointer" }}>
                   {creatingMarket ? "Analyzing..." : "Create"}
                 </button>
               </div>
@@ -998,7 +998,7 @@ export default function Dashboard() {
       {/* Trade Alert Message */}
       {tradeMessage && (
         <div style={{
-          position: "fixed", bottom: "30px", right: "30px", background: "#1D1633", color: "#fff",
+          position: "fixed", bottom: "30px", right: "30px", background: "#120F24", color: "#fff",
           padding: "16px 24px", borderRadius: "12px", boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
           zIndex: 2000, font: "600 14px 'Instrument Sans'", borderLeft: "4px solid #17B877"
         }}>
