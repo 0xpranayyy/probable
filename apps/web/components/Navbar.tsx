@@ -3,10 +3,13 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ProbableClient } from "@probable/sdk";
 
 const navItems = [
   { label: "Home", href: "/", bg: "transparent", color: "#1D1832" },
   { label: "Product", href: "/product", bg: "transparent", color: "#1D1832" },
+  { label: "Markets", href: "/markets", bg: "transparent", color: "#1D1832" },
+  { label: "Watchlist", href: "/watchlist", bg: "transparent", color: "#1D1832" },
   { label: "Docs", href: "/docs", bg: "transparent", color: "#1D1832" },
   { label: "Dashboard", href: "/dashboard", bg: "transparent", color: "#1D1832" },
   { label: "About", href: "/about", bg: "transparent", color: "#1D1832" },
@@ -22,14 +25,19 @@ export default function Navbar() {
   const [user, setUser] = useState<{ name: string; email: string } | null>(null);
 
   useEffect(() => {
-    const cached = localStorage.getItem("probable_user");
+    const cached = localStorage.getItem("probable_session");
     if (cached) {
-      setUser(JSON.parse(cached));
+      setUser(JSON.parse(cached).user);
     }
   }, []);
 
-  const handleSignOut = () => {
-    localStorage.removeItem("probable_user");
+  const handleSignOut = async () => {
+    const cached = localStorage.getItem("probable_session");
+    if (cached) {
+      const sdk = new ProbableClient({ token: JSON.parse(cached).token, baseUrl: "http://localhost:3001" });
+      await sdk.auth.logout().catch(() => {});
+    }
+    localStorage.removeItem("probable_session");
     setUser(null);
     window.location.href = "/";
   };

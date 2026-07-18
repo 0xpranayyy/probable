@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { ProbableClient } from "@probable/sdk";
+
+const sdk = new ProbableClient({ baseUrl: "http://localhost:3001" });
 
 interface TickerItem {
   q: string;
@@ -25,68 +28,21 @@ export default function Ticker() {
   useEffect(() => {
     async function fetchLiveMarkets() {
       try {
-        const res = await fetch("https://gamma-api.polymarket.com/markets?active=true&closed=false&limit=12&order=volume&direction=desc");
-        if (res.ok) {
-          const list = await res.json();
-          if (Array.isArray(list) && list.length > 0) {
-            const mapped = list.map((m: any) => {
-              // Parse YES price
-              let priceVal = 0.5;
-              if (m.lastTradePrice !== undefined && m.lastTradePrice !== null) {
-                priceVal = m.lastTradePrice;
-              } else if (m.outcomePrices) {
-                try {
-                  const arr = typeof m.outcomePrices === "string" ? JSON.parse(m.outcomePrices) : m.outcomePrices;
-                  if (arr && arr[0]) {
-                    priceVal = parseFloat(arr[0]);
-                  }
-                } catch {
-                  priceVal = 0.5;
-                }
-              }
-
-              const yesCents = Math.round(priceVal * 100);
-
-              // Parse 24h change
-              const change = m.oneDayPriceChange || 0;
-              const deltaVal = change * 100;
-              let deltaStr = "0.0%";
-              let deltaColor = "#8B84A3";
-
-              if (deltaVal > 0) {
-                deltaStr = `+${deltaVal.toFixed(1)}%`;
-                deltaColor = "#3ADFA5";
-              } else if (deltaVal < 0) {
-                deltaStr = `${deltaVal.toFixed(1)}%`;
-                deltaColor = "#FF8FB5";
-              } else {
-                // If 0 daily change, simulate small organic volatility based on id to look alive
-                const simulated = ((m.id % 5) - 2) * 0.4;
-                if (simulated > 0) {
-                  deltaStr = `+${simulated.toFixed(1)}%`;
-                  deltaColor = "#3ADFA5";
-                } else if (simulated < 0) {
-                  deltaStr = `${simulated.toFixed(1)}%`;
-                  deltaColor = "#FF8FB5";
-                }
-              }
-
-              // Truncate long questions
-              let cleanedQ = m.question || "";
-              if (cleanedQ.length > 45) {
-                cleanedQ = cleanedQ.substring(0, 42) + "...";
-              }
-
-              return {
-                q: cleanedQ,
-                yesStr: yesCents.toString(),
-                deltaColor,
-                deltaStr
-              };
-            });
-            setItems(mapped);
-          }
-        }
+        const events = await sdk.live.events({ limit: 12 });
+        const mapped = events
+          .map((e) => {
+            const m = e.markets[0];
+            if (!m || m.yesPrice == null) return null;
+            const yesCents = Math.round(m.yesPrice * 100);
+            const deltaVal = (m.oneDayPriceChange ?? 0) * 100;
+            const deltaStr = `${deltaVal >= 0 ? "+" : ""}${deltaVal.toFixed(1)}%`;
+            const deltaColor = deltaVal > 0 ? "#3ADFA5" : deltaVal < 0 ? "#FF8FB5" : "#8B84A3";
+            let cleanedQ = e.binary ? e.title : `${e.title} — ${m.groupItemTitle}`;
+            if (cleanedQ.length > 45) cleanedQ = cleanedQ.substring(0, 42) + "...";
+            return { q: cleanedQ, yesStr: yesCents.toString(), deltaColor, deltaStr };
+          })
+          .filter((x): x is TickerItem => x !== null);
+        if (mapped.length) setItems(mapped);
       } catch (err) {
         console.warn("Failed to fetch live Polymarket quotes, using static fallback:", err);
       }

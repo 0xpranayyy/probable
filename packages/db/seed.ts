@@ -1,12 +1,20 @@
 import { PrismaClient } from "@prisma/client";
+import { scryptSync, randomBytes } from "node:crypto";
 
 const prisma = new PrismaClient();
+
+function hashPassword(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  return salt + ":" + scryptSync(password, salt, 64).toString("hex");
+}
 
 async function main() {
   // Clear database
   await prisma.order.deleteMany({});
   await prisma.market.deleteMany({});
   await prisma.apiKey.deleteMany({});
+  await prisma.session.deleteMany({});
+  await prisma.watchlistItem.deleteMany({});
   await prisma.user.deleteMany({});
 
   console.log("Database cleared.");
@@ -16,6 +24,7 @@ async function main() {
     data: {
       id: "acct_9K2mPx",
       email: "ops@acme.com",
+      password: hashPassword("acme12345"),
       name: "Acme Sportsbook",
     },
   });

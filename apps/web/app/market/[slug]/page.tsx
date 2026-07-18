@@ -1,0 +1,242 @@
+"use client";
+
+import React, { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import Navbar from "../../../components/Navbar";
+import Ticker from "../../../components/Ticker";
+import Footer from "../../../components/Footer";
+import Star from "../../../components/Star";
+import { ProbableClient, LiveEvent, LiveMarket, PricePoint, OrderBook } from "@probable/sdk";
+import { useWatchlist } from "../../../lib/useWatchlist";
+
+const sdk = new ProbableClient({ baseUrl: "http://localhost:3001" });
+
+const INTERVALS: ["1D" | "1W" | "1M" | "ALL", "1d" | "1w" | "1m" | "max"][] = [
+  ["1D", "1d"], ["1W", "1w"], ["1M", "1m"], ["ALL", "max"],
+];
+
+function fmtCents(p: number | null) { return p == null ? "—" : Math.round(p * 100) + "¢"; }
+function fmtUsd(n: number) {
+  if (n >= 1e9) return "$" + (n / 1e9).toFixed(1) + "B";
+  if (n >= 1e6) return "$" + (n / 1e6).toFixed(1) + "M";
+  if (n >= 1e3) return "$" + Math.round(n / 1e3) + "K";
+  return "$" + Math.round(n);
+}
+function fmtDate(d: string | null) {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function Chart({ history }: { history: PricePoint[] }) {
+  if (!history?.length) {
+    return <div style={{ height: 220, display: "flex", alignItems: "center", justifyContent: "center", color: "#A9A2BE", font: "500 12px 'JetBrains Mono'" }}>No price history</div>;
+  }
+  const W = 600, H = 220, PAD = 6;
+  const ps = history.map((h) => h.p);
+  const min = Math.min(...ps), max = Math.max(...ps);
+  const r = (max - min) || 0.01;
+  const pts = history.map((h, i) => [
+    (i / (history.length - 1)) * W,
+    H - PAD - ((h.p - min) / r) * (H - PAD * 2),
+  ]);
+  const line = pts.map((p, i) => `${i ? "L" : "M"}${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" ");
+  const area = line + ` L${W} ${H} L0 ${H} Z`;
+  const up = ps[ps.length - 1] >= ps[0];
+  const color = up ? "#17B877" : "#F4633A";
+  return (
+    <div>
+      <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="cgrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity=".18" />
+            <stop offset="100%" stopColor={color} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={area} fill="url(#cgrad)" />
+        <path d={line} fill="none" stroke={color} strokeWidth={2.4} vectorEffect="non-scaling-stroke" strokeLinecap="round" />
+      </svg>
+      <div style={{ display: "flex", justifyContent: "space-between", font: "500 10.5px 'JetBrains Mono'", color: "#A9A2BE", marginTop: 6 }}>
+        <span>{new Date(history[0].t * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+        <span>hi {Math.round(max * 100)}¢ · lo {Math.round(min * 100)}¢</span>
+        <span>{new Date(history[history.length - 1].t * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+      </div>
+    </div>
+  );
+}
+
+function Book({ book }: { book: OrderBook }) {
+  const depth = (side: OrderBook["bids"]) => side.slice(0, 6);
+  const maxSize = Math.max(1, ...depth(book.bids).map((l) => l.size), ...depth(book.asks).map((l) => l.size));
+  const Row = ({ level, color, bg }: { level: { price: number; size: number }; color: string; bg: string }) => (
+    <div style={{ position: "relative", display: "flex", justifyContent: "space-between", padding: "4px 8px", font: "500 12px 'JetBrains Mono'", overflow: "hidden", borderRadius: 6 }}>
+      <div style={{ position: "absolute", inset: 0, width: (level.size / maxSize * 100) + "%", background: bg }} />
+      <span style={{ position: "relative", color }}>{Math.round(level.price * 100)}¢</span>
+      <span style={{ position: "relative", color: "#6E6787" }}>{Math.round(level.size).toLocaleString()}</span>
+    </div>
+  );
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      <div>
+        <div style={{ font: "600 10px 'JetBrains Mono'", color: "#0E9160", letterSpacing: "1px", marginBottom: 6 }}>BIDS</div>
+        {depth(book.bids).map((l, i) => <Row key={i} level={l} color="#0E9160" bg="rgba(23,184,119,.1)" />)}
+        {!book.bids.length && <div style={{ color: "#A9A2BE", fontSize: 12 }}>—</div>}
+      </div>
+      <div>
+        <div style={{ font: "600 10px 'JetBrains Mono'", color: "#D4491F", letterSpacing: "1px", marginBottom: 6 }}>ASKS</div>
+        {depth(book.asks).map((l, i) => <Row key={i} level={l} color="#D4491F" bg="rgba(244,99,58,.1)" />)}
+        {!book.asks.length && <div style={{ color: "#A9A2BE", fontSize: 12 }}>—</div>}
+      </div>
+    </div>
+  );
+}
+
+const card = { background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: 16, padding: 20 };
+
+export default function MarketDetailPage() {
+  const { slug } = useParams<{ slug: string }>();
+  const [event, setEvent] = useState<LiveEvent | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [sel, setSel] = useState(0);
+  const [interval_, setInterval_] = useState<"1d" | "1w" | "1m" | "max">("1w");
+  const [history, setHistory] = useState<PricePoint[] | null>(null);
+  const [book, setBook] = useState<OrderBook>({ bids: [], asks: [] });
+  const { isWatched, toggle, setAlert, items } = useWatchlist();
+
+  useEffect(() => {
+    setEvent(null); setError(null); setSel(0);
+    sdk.live.bySlug(slug).then(setEvent).catch(() => setError("Market not found."));
+  }, [slug]);
+
+  const market: LiveMarket | undefined = event?.markets[sel];
+
+  useEffect(() => {
+    if (!market?.yesToken) return;
+    setHistory(null);
+    sdk.live.priceHistory(market.yesToken, interval_).then(setHistory).catch(() => setHistory([]));
+  }, [market?.yesToken, interval_]);
+
+  useEffect(() => {
+    if (!market?.yesToken) return;
+    let alive = true;
+    const load = () => sdk.live.book(market.yesToken!).then((b) => alive && setBook(b)).catch(() => {});
+    load();
+    const iv = setInterval(load, 20_000);
+    return () => { alive = false; clearInterval(iv); };
+  }, [market?.yesToken]);
+
+  const watched = event ? isWatched(event.id) : false;
+  const watchItem = useMemo(() => items.find((i) => i.eventId === String(event?.id)), [items, event]);
+  const [above, setAbove] = useState("");
+  const [below, setBelow] = useState("");
+  useEffect(() => {
+    setAbove(watchItem?.above != null ? String(Math.round(watchItem.above * 100)) : "");
+    setBelow(watchItem?.below != null ? String(Math.round(watchItem.below * 100)) : "");
+  }, [watchItem?.above, watchItem?.below]);
+
+  const shell = (children: React.ReactNode) => (
+    <div style={{ minHeight: "100vh", background: "#FFFBF7", color: "#1D1832", fontFamily: "'Instrument Sans',sans-serif" }}>
+      <Ticker /><Navbar />
+      <div style={{ maxWidth: 1180, margin: "0 auto", padding: "40px 32px 96px" }}>{children}</div>
+      <Footer />
+    </div>
+  );
+
+  if (error) return shell(<div style={{ color: "#D4491F" }}>{error} <Link href="/markets">← Back to markets</Link></div>);
+  if (!event) return shell(<div style={{ color: "#A9A2BE", font: "500 13px 'JetBrains Mono'" }}>Loading market…</div>);
+
+  return shell(
+    <>
+      <Link href="/markets" style={{ font: "600 13px 'Instrument Sans'" }}>← Markets</Link>
+      <div style={{ display: "flex", gap: 16, alignItems: "flex-start", margin: "14px 0 20px" }}>
+        {event.image && <img src={event.image} alt="" width={56} height={56} style={{ borderRadius: 14, objectFit: "cover" }} />}
+        <div style={{ flex: 1 }}>
+          <h1 style={{ margin: 0, font: "800 28px/1.15 'Bricolage Grotesque'", letterSpacing: "-1px" }}>{event.title}</h1>
+          <div style={{ display: "flex", gap: 14, marginTop: 8, font: "500 12px 'JetBrains Mono'", color: "#A9A2BE", flexWrap: "wrap" }}>
+            <span>{fmtUsd(event.volume24hr)} · 24h vol</span>
+            <span>{fmtUsd(event.liquidity)} liquidity</span>
+            <span>ends {fmtDate(event.endDate)}</span>
+          </div>
+        </div>
+        <Star watched={watched} onClick={() => toggle(event)} size={24} />
+      </div>
+
+      <div className="detail-grid">
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={card}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+                <span style={{ font: "600 34px 'JetBrains Mono'", letterSpacing: "-2px", color: "#0E9160" }}>{fmtCents(market?.yesPrice ?? null)}</span>
+                <span style={{ font: "600 13px 'Instrument Sans'", color: "#6E6787" }}>{event.binary ? "YES" : market?.groupItemTitle}</span>
+              </div>
+              <div style={{ display: "flex", gap: 6 }}>
+                {INTERVALS.map(([label, val]) => (
+                  <button key={val} onClick={() => setInterval_(val)}
+                    style={{ background: interval_ === val ? "rgba(240,86,140,.12)" : "transparent", border: "none", color: interval_ === val ? "#D6336C" : "#A9A2BE", font: "600 11px 'JetBrains Mono'", padding: "5px 11px", borderRadius: 999, cursor: "pointer" }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {history === null
+              ? <div style={{ height: 220, display: "flex", alignItems: "center", justifyContent: "center", color: "#A9A2BE", font: "500 12px 'JetBrains Mono'" }}>Loading chart…</div>
+              : <Chart history={history} />}
+          </div>
+
+          {!event.binary && (
+            <div style={{ ...card, padding: 12 }}>
+              {event.markets.map((m, i) => (
+                <button key={m.id} onClick={() => setSel(i)}
+                  style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, background: sel === i ? "rgba(240,86,140,.07)" : "transparent", border: "none", borderRadius: 10, padding: "10px 12px", cursor: "pointer", textAlign: "left" }}>
+                  <span style={{ font: "600 14px 'Instrument Sans'", color: "#1D1832" }}>{m.groupItemTitle}</span>
+                  <span style={{ display: "flex", gap: 12, font: "600 13px 'JetBrains Mono'" }}>
+                    <span style={{ color: "#0E9160" }}>YES {fmtCents(m.yesPrice)}</span>
+                    <span style={{ color: "#A9A2BE" }}>NO {fmtCents(m.yesPrice != null ? 1 - m.yesPrice : null)}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {event.description && (
+            <div style={card}>
+              <div style={{ font: "700 15px 'Bricolage Grotesque'", marginBottom: 8 }}>Resolution</div>
+              <div style={{ color: "#6E6787", fontSize: 13.5, lineHeight: 1.65, whiteSpace: "pre-wrap" }}>
+                {event.description.length > 900 ? event.description.slice(0, 900) + "…" : event.description}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={card}>
+            <div style={{ font: "700 15px 'Bricolage Grotesque'", marginBottom: 12 }}>Order book · {event.binary ? "YES" : market?.groupItemTitle}</div>
+            <Book book={book} />
+            <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px dashed rgba(29,24,50,.1)", display: "flex", justifyContent: "space-between", font: "500 11.5px 'JetBrains Mono'", color: "#A9A2BE" }}>
+              <span>bid {market?.bestBid != null ? fmtCents(market.bestBid) : "—"}</span>
+              <span>ask {market?.bestAsk != null ? fmtCents(market.bestAsk) : "—"}</span>
+            </div>
+          </div>
+
+          <div style={card}>
+            <div style={{ font: "700 15px 'Bricolage Grotesque'", marginBottom: 4 }}>Price alert</div>
+            <div style={{ color: "#6E6787", fontSize: 12.5, marginBottom: 12 }}>
+              {watched ? "Notify when YES crosses a threshold (while the app is open)." : "Add to watchlist to set alerts."}
+            </div>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              <input value={above} onChange={(e) => setAbove(e.target.value.replace(/\D/g, ""))} placeholder="above ¢" disabled={!watched}
+                style={{ width: 82, background: "#FFFBF7", border: "1px solid rgba(29,24,50,.12)", borderRadius: 9, padding: "9px 12px", font: "500 13px 'JetBrains Mono'", outline: "none" }} />
+              <input value={below} onChange={(e) => setBelow(e.target.value.replace(/\D/g, ""))} placeholder="below ¢" disabled={!watched}
+                style={{ width: 82, background: "#FFFBF7", border: "1px solid rgba(29,24,50,.12)", borderRadius: 9, padding: "9px 12px", font: "500 13px 'JetBrains Mono'", outline: "none" }} />
+              <button disabled={!watched || !event}
+                onClick={() => event && setAlert(String(event.id), above ? Number(above) / 100 : null, below ? Number(below) / 100 : null)}
+                style={{ background: "#1D1633", border: "none", color: "#fff", font: "600 12.5px 'Instrument Sans'", padding: "9px 16px", borderRadius: 999, cursor: watched ? "pointer" : "default", opacity: watched ? 1 : .4 }}>
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}

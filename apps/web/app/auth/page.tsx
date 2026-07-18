@@ -11,6 +11,7 @@ const sdk = new ProbableClient({ baseUrl: "http://localhost:3001" });
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -18,7 +19,7 @@ export default function AuthPage() {
 
   useEffect(() => {
     // Check if user is already logged in
-    const cached = localStorage.getItem("probable_user");
+    const cached = localStorage.getItem("probable_session");
     if (cached) {
       window.location.href = "/dashboard";
     }
@@ -26,40 +27,22 @@ export default function AuthPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email || !password) return;
 
     setLoading(true);
     setMessage("");
     setIsError(false);
 
     try {
-      if (isLogin) {
-        // Log In
-        const data = await sdk.auth.login(email);
-        localStorage.setItem("probable_user", JSON.stringify({
-          id: data.user.id,
-          email: data.user.email,
-          name: data.user.name,
-          apiKey: data.apiKeys[0]?.key || ""
-        }));
-        setMessage("Login successful! Redirecting...");
-        setTimeout(() => {
-          window.location.href = "/dashboard";
-        }, 1200);
-      } else {
-        // Sign Up
-        const data = await sdk.auth.signup(email, name || undefined);
-        localStorage.setItem("probable_user", JSON.stringify({
-          id: data.user.id,
-          email: data.user.email,
-          name: data.user.name,
-          apiKey: data.apiKey?.key || ""
-        }));
-        setMessage("Signup successful! Welcome aboard. Redirecting...");
-        setTimeout(() => {
-          window.location.href = "/dashboard";
-        }, 1200);
-      }
+      const data = isLogin
+        ? await sdk.auth.login(email, password)
+        : await sdk.auth.signup(email, password, name || undefined);
+
+      localStorage.setItem("probable_session", JSON.stringify({ token: data.token, user: data.user }));
+      setMessage(isLogin ? "Login successful! Redirecting..." : "Signup successful! Welcome aboard. Redirecting...");
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 1200);
     } catch (err: any) {
       console.error(err);
       setIsError(true);
@@ -164,6 +147,27 @@ export default function AuthPage() {
                 placeholder="you@company.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                style={{
+                  width: "100%",
+                  background: "#FFFBF7",
+                  border: "1px solid rgba(29,24,50,.12)",
+                  borderRadius: "10px",
+                  padding: "12px 14px",
+                  fontSize: "14px",
+                  fontFamily: "'Instrument Sans'"
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ fontWeight: 600, fontSize: "13px", display: "block", marginBottom: "6px" }}>Password</label>
+              <input
+                type="password"
+                required
+                minLength={8}
+                placeholder="At least 8 characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 style={{
                   width: "100%",
                   background: "#FFFBF7",

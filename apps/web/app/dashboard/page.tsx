@@ -6,8 +6,6 @@ import Ticker from "../../components/Ticker";
 import Footer from "../../components/Footer";
 import { ProbableClient } from "@probable/sdk";
 
-const sdk = new ProbableClient({ apiKey: "sk_test_4Jn8Wz1c", baseUrl: "http://localhost:3001" });
-
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("Overview");
   const [dbMarkets, setDbMarkets] = useState<any[]>([]);
@@ -33,14 +31,15 @@ export default function Dashboard() {
   const [executingTrade, setExecutingTrade] = useState(false);
   const [tradeMessage, setTradeMessage] = useState("");
 
-  // User Session state
-  const [user, setUser] = useState<{ id: string; email: string; name: string; apiKey: string } | null>(null);
+  // User session state
+  const [user, setUser] = useState<{ id: string; email: string; name: string } | null>(null);
+  const [token, setToken] = useState<string | null>(null);
 
   // Fetch data from backend API
-  const fetchData = async (userKey?: string) => {
-    const activeKey = userKey || user?.apiKey;
-    if (!activeKey) return;
-    const userSdk = new ProbableClient({ apiKey: activeKey, baseUrl: "http://localhost:3001" });
+  const fetchData = async (activeToken?: string) => {
+    const t = activeToken || token;
+    if (!t) return;
+    const userSdk = new ProbableClient({ token: t, baseUrl: "http://localhost:3001" });
 
     try {
       const marketsData = await userSdk.markets.list();
@@ -62,11 +61,12 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    const cached = localStorage.getItem("probable_user");
+    const cached = localStorage.getItem("probable_session");
     if (cached) {
-      const parsed = JSON.parse(cached);
-      setUser(parsed);
-      fetchData(parsed.apiKey);
+      const { token, user } = JSON.parse(cached);
+      setUser(user);
+      setToken(token);
+      fetchData(token);
     } else {
       setLoading(false);
     }
@@ -75,10 +75,10 @@ export default function Dashboard() {
   const tabs = ["Overview", "Markets", "Payouts", "Compliance", "Developers"];
 
   const handleCreateKey = async () => {
-    if (!user) return;
-    const userSdk = new ProbableClient({ apiKey: user.apiKey, baseUrl: "http://localhost:3001" });
+    if (!token) return;
+    const userSdk = new ProbableClient({ token, baseUrl: "http://localhost:3001" });
     try {
-      const newKey = await userSdk.keys.create(user.id);
+      const newKey = await userSdk.keys.create("test");
       setDbKeys(prev => [...prev, newKey]);
     } catch (e) {
       console.error(e);
@@ -87,10 +87,10 @@ export default function Dashboard() {
 
   const handleCreateMarket = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newQuestion || !user) return;
+    if (!newQuestion || !token) return;
 
     setCreatingMarket(true);
-    const userSdk = new ProbableClient({ apiKey: user.apiKey, baseUrl: "http://localhost:3001" });
+    const userSdk = new ProbableClient({ token, baseUrl: "http://localhost:3001" });
     try {
       await userSdk.markets.create({
         question: newQuestion,
@@ -112,10 +112,10 @@ export default function Dashboard() {
   };
 
   const handleExecuteTrade = async (marketId: string, side: "YES" | "NO") => {
-    if (!user) return;
+    if (!user || !token) return;
     setExecutingTrade(true);
     setTradeMessage("");
-    const userSdk = new ProbableClient({ apiKey: user.apiKey, baseUrl: "http://localhost:3001" });
+    const userSdk = new ProbableClient({ token, baseUrl: "http://localhost:3001" });
     try {
       await userSdk.trades.create({
         marketId,

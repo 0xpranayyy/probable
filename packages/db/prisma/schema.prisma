@@ -8,14 +8,26 @@ generator client {
 }
 
 model User {
-  id        String    @id @default(uuid())
-  email     String    @unique
-  name      String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  ApiKeys   ApiKey[]
-  Markets   Market[]
-  Orders    Order[]
+  id            String          @id @default(uuid())
+  email         String          @unique
+  password      String // scrypt hash: salt:hex
+  name          String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  ApiKeys       ApiKey[]
+  Sessions      Session[]
+  Markets       Market[]
+  Orders        Order[]
+  WatchlistItem WatchlistItem[]
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
 }
 
 model ApiKey {
@@ -28,17 +40,17 @@ model ApiKey {
 }
 
 model Market {
-  id          String   @id @default(uuid())
-  question    String
-  closesAt    DateTime
-  oracleId    String
-  liquidity   Float    @default(0)
-  creatorId   String
-  creator     User     @relation(fields: [creatorId], references: [id])
-  status      String   @default("OPEN") // OPEN, RESOLVED, CANCELED
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  Orders      Order[]
+  id        String   @id @default(uuid())
+  question  String
+  closesAt  DateTime
+  oracleId  String
+  liquidity Float    @default(0)
+  creatorId String
+  creator   User     @relation(fields: [creatorId], references: [id])
+  status    String   @default("OPEN") // OPEN, RESOLVED, CANCELED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Orders    Order[]
 }
 
 model Order {
@@ -47,8 +59,25 @@ model Order {
   market    Market   @relation(fields: [marketId], references: [id])
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  type      String   // YES or NO
+  type      String // YES or NO
   amount    Float
   price     Float
   createdAt DateTime @default(now())
+}
+
+// A user's saved live Polymarket event, with an optional price alert.
+model WatchlistItem {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventId    String // Polymarket Gamma event id
+  slug       String
+  title      String
+  image      String?
+  alertAbove Float?
+  alertBelow Float?
+  alertFired Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, eventId])
 }

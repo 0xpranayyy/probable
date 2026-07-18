@@ -110,12 +110,12 @@ export default function Docs() {
   const [loadingSandbox, setLoadingSandbox] = useState(false);
 
   useEffect(() => {
-    const cached = localStorage.getItem("probable_user");
+    const cached = localStorage.getItem("probable_session");
     if (cached) {
-      const parsed = JSON.parse(cached);
-      if (parsed.apiKey) {
-        setSandboxApiKey(parsed.apiKey);
-        setFormInputs(prev => ({ ...prev, userId: parsed.id }));
+      const { token, user } = JSON.parse(cached);
+      if (token) {
+        setSandboxApiKey(token);
+        setFormInputs(prev => ({ ...prev, userId: user.id }));
       }
     }
   }, []);
@@ -137,7 +137,7 @@ export default function Docs() {
       let data: any;
 
       if (activeSection.id === "keys") {
-        data = await client.keys.create(formInputs["userId"] || "anon_user");
+        data = await client.keys.create("test");
       } else if (activeSection.id === "markets") {
         data = await client.markets.create({
           question: formInputs["question"] || "",

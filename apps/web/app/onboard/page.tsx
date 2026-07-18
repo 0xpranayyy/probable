@@ -17,14 +17,16 @@ export default function Onboarding() {
   const [country, setCountry] = useState("United States");
   const [generatedApiKey, setGeneratedApiKey] = useState("sk_test_4Jn8Wz1cQm7RtY2vBx5A");
 
-  const [user, setUser] = useState<{ id: string; email: string; name: string; apiKey: string } | null>(null);
+  const [user, setUser] = useState<{ id: string; email: string; name: string } | null>(null);
+  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    const cached = localStorage.getItem("probable_user");
+    const cached = localStorage.getItem("probable_session");
     if (cached) {
-      const parsed = JSON.parse(cached);
-      setUser(parsed);
-      setCompanyName(parsed.name || parsed.email.split("@")[0]);
+      const { token, user } = JSON.parse(cached);
+      setUser(user);
+      setToken(token);
+      setCompanyName(user.name || user.email.split("@")[0]);
     }
   }, []);
 
@@ -45,22 +47,11 @@ export default function Onboarding() {
   ];
 
   const handleNextStep = async () => {
-    if (step === 2) {
+    if (step === 2 && token) {
       try {
-        const cached = localStorage.getItem("probable_user");
-        const activeKey = cached ? JSON.parse(cached).apiKey : "";
-        const client = new ProbableClient({ apiKey: activeKey, baseUrl: "http://localhost:3001" });
-        const keyData = await client.keys.create(user?.id || companyName || "Anonymous Developer");
+        const client = new ProbableClient({ token, baseUrl: "http://localhost:3001" });
+        const keyData = await client.keys.create("test");
         setGeneratedApiKey(keyData.key);
-
-        // Update cached key if it is the user's first key
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (!parsed.apiKey) {
-            parsed.apiKey = keyData.key;
-            localStorage.setItem("probable_user", JSON.stringify(parsed));
-          }
-        }
       } catch (e) {
         console.warn("Failed to contact backend key generator, using sandbox default:", e);
       }

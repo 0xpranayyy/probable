@@ -13,8 +13,7 @@
     "@probable/db": "*",
     "bullmq": "^4.10.0",
     "ioredis": "^5.3.0",
-    "ws": "^8.16.0",
-    "ethers": "^6.11.0"
+    "ws": "^8.16.0"
   },
   "devDependencies": {
     "tsx": "^4.7.1",

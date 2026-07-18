@@ -1,38 +1,76 @@
-import { Hono } from 'hono'
+import { Hono, Context } from 'hono'
 import { cors } from 'hono/cors'
 import { serve } from '@hono/node-server'
-import { prisma } from '@probable/db'
+import { prisma, User } from '@probable/db'
+import { scryptSync, randomBytes, timingSafeEqual } from 'node:crypto'
 
 // Import services
 import { WalletService } from './services/wallet'
 import { PolymarketService } from './services/polymarket'
+import { LiveMarketsService } from './services/polymarketLive'
 import { RealtimeService } from './services/realtime'
 import { AiService } from './services/ai'
 import { PolyScoreService } from './services/polyscore'
 import { NotificationService } from './services/notifications'
 import { QueueService } from './services/queue'
 
-const app = new Hono()
+type Variables = { user: User; sessionToken?: string }
+const app = new Hono<{ Variables: Variables }>()
 const webhookLogs: any[] = []
 
 // Enable CORS
 app.use('*', cors())
 
-// Auth Middleware: Check API Key
-const authMiddleware = async (c: any, next: () => Promise<void>) => {
-  const apiKey = c.req.header("Authorization")?.replace("Bearer ", "")
-  if (!apiKey) {
-    return c.json({ error: "Unauthorized: Missing API key." }, 401)
-  }
-  
-  const keyExists = await prisma.apiKey.findUnique({
-    where: { key: apiKey }
-  })
+// ---------- password + session helpers ----------
 
-  if (!keyExists || !keyExists.isActive) {
-    return c.json({ error: "Unauthorized: Invalid or inactive API key." }, 401)
+function hashPassword(password: string) {
+  const salt = randomBytes(16).toString('hex')
+  return salt + ':' + scryptSync(password, salt, 64).toString('hex')
+}
+
+function verifyPassword(password: string, stored: string) {
+  const [salt, hash] = stored.split(':')
+  if (!salt || !hash) return false
+  const candidate = scryptSync(password, salt, 64)
+  const expected = Buffer.from(hash, 'hex')
+  return candidate.length === expected.length && timingSafeEqual(candidate, expected)
+}
+
+const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000 // 30 days
+
+async function createSession(userId: string) {
+  const token = 'ses_' + randomBytes(24).toString('hex')
+  await prisma.session.create({ data: { token, userId, expiresAt: new Date(Date.now() + SESSION_TTL_MS) } })
+  return token
+}
+
+const publicUser = (u: { id: string; email: string; name: string | null }) => ({ id: u.id, email: u.email, name: u.name })
+
+// Auth middleware — dual mode:
+//  - "ses_..." tokens are user sessions (web app sign-in)
+//  - anything else is checked as a developer API key (programmatic/SDK access)
+// Either attaches an authenticated user onto the request context.
+const authMiddleware = async (c: Context<{ Variables: Variables }>, next: () => Promise<void>) => {
+  const token = c.req.header('Authorization')?.replace('Bearer ', '')
+  if (!token) {
+    return c.json({ error: 'Unauthorized: Missing credentials.' }, 401)
   }
-  
+
+  if (token.startsWith('ses_')) {
+    const session = await prisma.session.findUnique({ where: { token }, include: { user: true } })
+    if (!session || session.expiresAt < new Date()) {
+      return c.json({ error: 'Unauthorized: Invalid or expired session.' }, 401)
+    }
+    c.set('user', session.user)
+    c.set('sessionToken', token)
+    return next()
+  }
+
+  const apiKey = await prisma.apiKey.findUnique({ where: { key: token }, include: { user: true } })
+  if (!apiKey || !apiKey.isActive) {
+    return c.json({ error: 'Unauthorized: Invalid or inactive API key.' }, 401)
+  }
+  c.set('user', apiKey.user)
   await next()
 }
 
@@ -57,24 +95,21 @@ app.get('/v1/markets', async (c) => {
   return c.json(dbMarkets)
 })
 
-// Retrieve active API keys from SQLite database
-app.get('/v1/keys', async (c) => {
-  const keys = await prisma.apiKey.findMany()
+// Retrieve the authenticated user's own API keys
+app.get('/v1/keys', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const keys = await prisma.apiKey.findMany({ where: { userId: user.id } })
   return c.json(keys)
 })
 
-// Generate new API key
-app.post('/keys', async (c) => {
-  const body = await c.req.json().catch(() => ({}))
-  const userId = body.userId || "acct_9K2mPx"
-  const keyStr = `sk_test_${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 10)}`
-  
+// Generate a new API key for the authenticated user
+app.post('/v1/keys', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const env = (await c.req.json().catch(() => ({}))).env === 'live' ? 'live' : 'test'
+  const keyStr = `sk_${env}_${randomBytes(16).toString('hex')}`
+
   const newKey = await prisma.apiKey.create({
-    data: {
-      key: keyStr,
-      userId,
-      isActive: true
-    }
+    data: { key: keyStr, userId: user.id, isActive: true }
   })
 
   return c.json(newKey)
@@ -267,52 +302,153 @@ app.get('/v1/config/pricing', async (c) => {
 
 app.post('/v1/auth/signup', async (c) => {
   const body = await c.req.json().catch(() => ({}))
-  if (!body.email) {
-    return c.json({ error: "Email is required" }, 400)
+  if (!body.email || !body.password || String(body.password).length < 8) {
+    return c.json({ error: "Email and a password of at least 8 characters are required" }, 400)
   }
 
-  let user = await prisma.user.findUnique({
-    where: { email: body.email }
-  })
-
-  if (user) {
-    return c.json({ error: "User already exists with this email" }, 400)
+  const existing = await prisma.user.findUnique({ where: { email: body.email } })
+  if (existing) {
+    return c.json({ error: "An account with this email already exists" }, 409)
   }
 
-  user = await prisma.user.create({
+  const user = await prisma.user.create({
     data: {
       email: body.email,
-      name: body.name || null
+      name: body.name || null,
+      password: hashPassword(body.password),
     }
   })
 
-  const keyString = `sk_test_dev_${Math.random().toString(36).substring(2, 10)}`
-  const apiKey = await prisma.apiKey.create({
-    data: {
-      key: keyString,
-      userId: user.id
-    }
-  })
+  const keyString = `sk_test_${randomBytes(16).toString('hex')}`
+  await prisma.apiKey.create({ data: { key: keyString, userId: user.id } })
 
-  return c.json({ user, apiKey })
+  const token = await createSession(user.id)
+  return c.json({ token, user: publicUser(user) }, 201)
 })
 
 app.post('/v1/auth/login', async (c) => {
   const body = await c.req.json().catch(() => ({}))
-  if (!body.email) {
-    return c.json({ error: "Email is required" }, 400)
+  const user = await prisma.user.findUnique({ where: { email: body.email || '' } })
+
+  if (!user || !verifyPassword(body.password || '', user.password)) {
+    return c.json({ error: "Invalid email or password" }, 401)
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email: body.email },
-    include: { ApiKeys: true }
+  const token = await createSession(user.id)
+  return c.json({ token, user: publicUser(user) })
+})
+
+app.get('/v1/auth/me', authMiddleware, async (c) => {
+  return c.json(publicUser(c.get('user')))
+})
+
+app.post('/v1/auth/logout', authMiddleware, async (c) => {
+  const token = c.get('sessionToken')
+  if (token) await prisma.session.deleteMany({ where: { token } })
+  return c.json({ ok: true })
+})
+
+// ---------- live Polymarket data (read-only, browser -> this API -> Polymarket) ----------
+
+app.get('/v1/live/events', async (c) => {
+  const tag = c.req.query('tag') || null
+  const limit = Number(c.req.query('limit') || 40)
+  try {
+    const events = await LiveMarketsService.listEvents({ tag, limit })
+    return c.json(events)
+  } catch (err: any) {
+    return c.json({ error: err.message }, 502)
+  }
+})
+
+app.get('/v1/live/events/search', async (c) => {
+  const q = c.req.query('q') || ''
+  if (!q.trim()) return c.json([])
+  try {
+    return c.json(await LiveMarketsService.search(q))
+  } catch (err: any) {
+    return c.json({ error: err.message }, 502)
+  }
+})
+
+app.get('/v1/live/events/by-ids', async (c) => {
+  const ids = (c.req.query('ids') || '').split(',').filter(Boolean)
+  try {
+    return c.json(await LiveMarketsService.getEventsByIds(ids))
+  } catch (err: any) {
+    return c.json({ error: err.message }, 502)
+  }
+})
+
+app.get('/v1/live/events/:slug', async (c) => {
+  try {
+    const event = await LiveMarketsService.getEventBySlug(c.req.param('slug'))
+    if (!event) return c.json({ error: 'Event not found' }, 404)
+    return c.json(event)
+  } catch (err: any) {
+    return c.json({ error: err.message }, 502)
+  }
+})
+
+app.get('/v1/live/price-history/:tokenId', async (c) => {
+  const interval = (c.req.query('interval') as any) || '1w'
+  try {
+    return c.json(await LiveMarketsService.priceHistory(c.req.param('tokenId'), interval))
+  } catch (err: any) {
+    return c.json({ error: err.message }, 502)
+  }
+})
+
+app.get('/v1/live/book/:tokenId', async (c) => {
+  try {
+    return c.json(await LiveMarketsService.orderBook(c.req.param('tokenId')))
+  } catch (err: any) {
+    return c.json({ error: err.message }, 502)
+  }
+})
+
+// ---------- watchlist ----------
+
+app.get('/v1/watchlist', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const items = await prisma.watchlistItem.findMany({ where: { userId: user.id }, orderBy: { createdAt: 'desc' } })
+  return c.json(items)
+})
+
+app.post('/v1/watchlist', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const body = await c.req.json().catch(() => ({}))
+  if (!body.eventId || !body.slug || !body.title) {
+    return c.json({ error: 'eventId, slug, and title are required' }, 400)
+  }
+  const item = await prisma.watchlistItem.upsert({
+    where: { userId_eventId: { userId: user.id, eventId: body.eventId } },
+    create: { userId: user.id, eventId: body.eventId, slug: body.slug, title: body.title, image: body.image || null },
+    update: {},
   })
+  return c.json(item, 201)
+})
 
-  if (!user) {
-    return c.json({ error: "No user found with this email" }, 404)
-  }
+app.delete('/v1/watchlist/:eventId', authMiddleware, async (c) => {
+  const user = c.get('user')
+  await prisma.watchlistItem.deleteMany({ where: { userId: user.id, eventId: c.req.param('eventId') } })
+  return c.json({ ok: true })
+})
 
-  return c.json({ user, apiKeys: user.ApiKeys })
+app.patch('/v1/watchlist/:eventId/alert', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const body = await c.req.json().catch(() => ({}))
+  const { count } = await prisma.watchlistItem.updateMany({
+    where: { userId: user.id, eventId: c.req.param('eventId') },
+    data: { alertAbove: body.above ?? null, alertBelow: body.below ?? null, alertFired: false },
+  })
+  if (!count) return c.json({ error: 'Watchlist item not found' }, 404)
+  const eventId = c.req.param('eventId')
+  if (!eventId) return c.json({ error: 'eventId is required' }, 400)
+  const item = await prisma.watchlistItem.findUnique({
+    where: { userId_eventId: { userId: user.id, eventId } },
+  })
+  return c.json(item)
 })
 
 const port = 3001
