@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:ital,wght@0,400..700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFBF7;color:#1D1832;font-family:'Instrument Sans',sans-serif;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:#D6336C;text-decoration:none}a:hover{color:#A61E4D}
+::selection{background:rgba(240,86,140,.22)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+@keyframes fadeUp{0%{opacity:0;transform:translateY(16px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes drift{0%{transform:translate(0,0) scale(1)}33%{transform:translate(40px,-30px) scale(1.08)}66%{transform:translate(-30px,20px) scale(.95)}100%{transform:translate(0,0) scale(1)}}
+input[type=range]{-webkit-appearance:none;appearance:none;height:6px;border-radius:3px;background:linear-gradient(90deg,#F0568C var(--fill,50%),rgba(29,24,50,.1) var(--fill,50%));outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;border:6px solid #F0568C;cursor:pointer;box-shadow:0 2px 12px rgba(240,86,140,.4)}
+</style>
+</helmet>
+<div style="min-height:100vh;background:#FFFBF7;color:#1D1832;font-family:'Instrument Sans',sans-serif">
+
+<!-- LIVE TICKER -->
+<sc-if value="{{ showTicker }}" hint-placeholder-val="{{ true }}">
+<div style="background:#1D1633;overflow:hidden;height:36px;display:flex;align-items:center">
+  <div style="display:flex;white-space:nowrap;animation:marquee 40s linear infinite;will-change:transform">
+    <sc-for list="{{ tickerLoop }}" as="t" hint-placeholder-count="8">
+      <div style="display:flex;align-items:center;gap:8px;padding:0 28px;font:500 11.5px 'JetBrains Mono',monospace">
+        <span style="width:6px;height:6px;border-radius:50%;background:#3ADFA5;animation:pulse 2s infinite"></span>
+        <span style="color:#B9AEDB">{{ t.q }}</span>
+        <span style="color:#fff;font-weight:600">{{ t.yesStr }}¢</span>
+        <span style="color:{{ t.deltaColor }}">{{ t.deltaStr }}</span>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<!-- NAV -->
+<div style="position:sticky;top:0;z-index:50;backdrop-filter:blur(16px);background:rgba(255,251,247,.85);border-bottom:1px solid rgba(29,24,50,.08)">
+  <div style="max-width:1180px;margin:0 auto;padding:0 32px;height:66px;display:flex;align-items:center;justify-content:space-between;gap:20px">
+    <div onClick="{{ goHome }}" style="display:flex;align-items:center;gap:10px;cursor:pointer">
+      <svg width="30" height="30" viewBox="0 0 30 30"><rect width="30" height="30" rx="9" fill="#1D1633"></rect><path d="M7 20.5 L12 13 L16 16.5 L23 8" stroke="#FF8FB5" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="23" cy="8" r="2.2" fill="#3ADFA5"></circle></svg>
+      <span style="font:700 20px 'Bricolage Grotesque',sans-serif;letter-spacing:-.5px">Probable</span>
+    </div>
+    <div style="display:flex;gap:2px;align-items:center">
+      <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="5">
+        <button onClick="{{ n.go }}" style="background:{{ n.bg }};border:none;color:{{ n.color }};font:600 14.5px 'Instrument Sans',sans-serif;padding:8px 15px;border-radius:999px;cursor:pointer;transition:background .15s" style-hover="background:rgba(29,24,50,.06)">{{ n.label }}</button>
+      </sc-for>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center">
+      <button style="background:none;border:none;color:#1D1832;font:600 14.5px 'Instrument Sans',sans-serif;cursor:pointer" style-hover="color:#D6336C">Sign in</button>
+      <button onClick="{{ goOnboard }}" style="display:flex;align-items:center;gap:7px;background:#1D1633;border:none;color:#fff;font:600 14.5px 'Instrument Sans',sans-serif;padding:10px 20px;border-radius:999px;cursor:pointer;transition:all .2s" style-hover="background:#2E2352;transform:translateY(-1px);box-shadow:0 8px 22px rgba(29,22,51,.25)">Get API keys <span style="color:#FF8FB5">→</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ HOME ============ -->
+<sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Home">
+  <div style="position:relative;overflow:hidden;background:linear-gradient(115deg,#FFE3EC 0%,#FFEFDD 34%,#E8FBF1 66%,#EFE9FF 100%);clip-path:polygon(0 0,100% 0,100% 88%,0 100%)">
+    <div style="position:absolute;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(255,143,181,.5),transparent 70%);top:-180px;right:6%;animation:drift 16s ease-in-out infinite;filter:blur(10px)"></div>
+    <div style="position:absolute;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(58,223,165,.35),transparent 70%);bottom:-120px;left:2%;animation:drift 20s ease-in-out infinite reverse;filter:blur(10px)"></div>
+    <div style="position:relative;max-width:1180px;margin:0 auto;padding:88px 32px 130px;display:grid;grid-template-columns:1.05fr .95fr;gap:60px;align-items:start">
+      <div style="animation:fadeUp .7s ease both;padding-top:16px">
+        <h1 style="margin:0 0 24px;font:800 62px/1.0 'Bricolage Grotesque',sans-serif;letter-spacing:-2.6px;text-wrap:pretty">Financial infrastructure for prediction markets</h1>
+        <p style="margin:0 0 36px;font-size:19px;line-height:1.55;color:#4A4363;max-width:500px;text-wrap:pretty">Settlement rails, embeddable markets, and built-in compliance — one API. Add live event markets to your product the way you'd add a checkout.</p>
+        <div style="display:flex;gap:14px;align-items:center">
+          <button onClick="{{ goDocs }}" style="display:flex;align-items:center;gap:8px;background:#1D1633;border:none;color:#fff;font:700 16px 'Instrument Sans',sans-serif;padding:15px 28px;border-radius:999px;cursor:pointer;transition:all .2s" style-hover="transform:translateY(-2px);box-shadow:0 12px 30px rgba(29,22,51,.3)">Start building <span style="color:#FF8FB5">→</span></button>
+          <button onClick="{{ goProduct }}" style="background:rgba(255,255,255,.7);border:1px solid rgba(29,24,50,.14);color:#1D1832;font:700 16px 'Instrument Sans',sans-serif;padding:15px 28px;border-radius:999px;cursor:pointer;backdrop-filter:blur(6px)" style-hover="background:#fff">Explore the platform</button>
+        </div>
+        <div style="display:flex;gap:36px;margin-top:52px">
+          <div><div style="font:600 27px 'JetBrains Mono',monospace;letter-spacing:-1.5px">$2.4B</div><div style="font-size:13.5px;color:#6E6787;margin-top:3px">settled to date</div></div>
+          <div style="width:1px;background:rgba(29,24,50,.12)"></div>
+          <div><div style="font:600 27px 'JetBrains Mono',monospace;letter-spacing:-1.5px">99.99%</div><div style="font-size:13.5px;color:#6E6787;margin-top:3px">payout uptime</div></div>
+          <div style="width:1px;background:rgba(29,24,50,.12)"></div>
+          <div><div style="font:600 27px 'JetBrains Mono',monospace;letter-spacing:-1.5px">14ms</div><div style="font-size:13.5px;color:#6E6787;margin-top:3px">median quote</div></div>
+        </div>
+      </div>
+      <!-- LIVE EMBED WIDGET -->
+      <div style="animation:fadeUp .7s .15s ease both">
+        <div style="background:#fff;border:1px solid rgba(29,24,50,.09);border-radius:20px;padding:20px;box-shadow:0 30px 70px rgba(74,42,90,.18)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding:0 4px">
+            <span style="font:600 11px 'JetBrains Mono',monospace;color:#8B84A3;letter-spacing:.8px">&lt;probable-embed&gt; · LIVE</span>
+            <span style="display:flex;align-items:center;gap:6px;font:600 11px 'JetBrains Mono',monospace;color:#17B877"><span style="width:6px;height:6px;border-radius:50%;background:#17B877;animation:pulse 1.6s infinite"></span>STREAMING</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ heroMarkets }}" as="m" hint-placeholder-count="3">
+              <div style="background:#FFFBF7;border:1px solid rgba(29,24,50,.08);border-radius:14px;padding:14px 16px;transition:all .2s" style-hover="border-color:rgba(240,86,140,.45);box-shadow:0 6px 18px rgba(240,86,140,.1)">
+                <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
+                  <div style="flex:1">
+                    <div style="font:600 10.5px 'JetBrains Mono',monospace;color:{{ m.catColor }};margin-bottom:5px;letter-spacing:.6px">{{ m.cat }}</div>
+                    <div style="font-weight:600;font-size:14.5px;line-height:1.35">{{ m.q }}</div>
+                  </div>
+                  <svg width="78" height="30" viewBox="0 0 100 32" preserveAspectRatio="none" style="flex:none;margin-top:3px;overflow:visible"><path d="{{ m.spark }}" fill="none" stroke="{{ m.sparkColor }}" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linecap="round"></path></svg>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:12px;align-items:center">
+                  <button style="flex:1;background:rgba(23,184,119,.1);border:1px solid rgba(23,184,119,.35);color:#0E9160;font:600 12.5px 'JetBrains Mono',monospace;padding:8px 0;border-radius:9px;cursor:pointer;transition:background .15s" style-hover="background:rgba(23,184,119,.22)">YES {{ m.yesStr }}¢</button>
+                  <button style="flex:1;background:rgba(244,99,58,.08);border:1px solid rgba(244,99,58,.32);color:#D4491F;font:600 12.5px 'JetBrains Mono',monospace;padding:8px 0;border-radius:9px;cursor:pointer;transition:background .15s" style-hover="background:rgba(244,99,58,.18)">NO {{ m.noStr }}¢</button>
+                  <span style="font:500 11px 'JetBrains Mono',monospace;color:#8B84A3;flex:none">{{ m.vol }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="margin-top:14px;padding:10px 4px 2px;display:flex;justify-content:space-between;align-items:center;border-top:1px dashed rgba(29,24,50,.1)">
+            <span style="font-size:12px;color:#8B84A3">Rendered by one line of JavaScript</span>
+            <span style="font:600 12px 'JetBrains Mono',monospace;color:#D6336C">view source →</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRUST BAR -->
+  <div style="max-width:1180px;margin:0 auto;padding:44px 32px 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+    <sc-for list="{{ trustBar }}" as="tb" hint-placeholder-count="4">
+      <div style="background:#fff;border:1px solid rgba(29,24,50,.08);border-radius:16px;padding:20px 22px">
+        <div style="font:600 22px 'JetBrains Mono',monospace;letter-spacing:-1px;margin-bottom:5px">{{ tb.value }}</div>
+        <div style="font-weight:600;font-size:13.5px;margin-bottom:3px">{{ tb.label }}</div>
+        <div style="font-size:12px;color:#A9A2BE">{{ tb.sub }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <!-- PRIMITIVES -->
+  <div style="max-width:1180px;margin:0 auto;padding:88px 32px 40px">
+    <div style="font:600 12.5px 'JetBrains Mono',monospace;color:#D6336C;letter-spacing:1.6px;margin-bottom:16px">THE PLATFORM</div>
+    <h2 style="margin:0 0 16px;font:800 44px/1.06 'Bricolage Grotesque',sans-serif;letter-spacing:-1.8px;max-width:620px">Everything between a question and a payout</h2>
+    <p style="margin:0 0 52px;color:#6E6787;font-size:17px;max-width:540px;line-height:1.6">Three primitives compose into any prediction-market product — from one embedded widget to a full exchange.</p>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+      <sc-for list="{{ features }}" as="f" hint-placeholder-count="3">
+        <div style="background:#fff;border:1px solid rgba(29,24,50,.08);border-radius:18px;padding:30px;transition:all .25s" style-hover="transform:translateY(-5px);box-shadow:0 20px 44px rgba(74,42,90,.12)">
+          <div style="width:46px;height:46px;border-radius:13px;background:{{ f.iconBg }};display:flex;align-items:center;justify-content:center;margin-bottom:22px;font:700 17px 'JetBrains Mono',monospace;color:{{ f.iconColor }}">{{ f.glyph }}</div>
+          <div style="font:700 20px 'Bricolage Grotesque',sans-serif;margin-bottom:10px;letter-spacing:-.4px">{{ f.title }}</div>
+          <div style="color:#6E6787;font-size:14.5px;line-height:1.62">{{ f.body }}</div>
+          <div onClick="{{ goProduct }}" style="margin-top:20px;font:600 13.5px 'Instrument Sans',sans-serif;color:#D6336C;cursor:pointer">{{ f.link }} →</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <!-- CODE -->
+  <div style="max-width:1180px;margin:0 auto;padding:72px 32px 96px;display:grid;grid-template-columns:1fr 1.1fr;gap:60px;align-items:center">
+    <div>
+      <div style="font:600 12.5px 'JetBrains Mono',monospace;color:#0E9160;letter-spacing:1.6px;margin-bottom:16px">DEVELOPER FIRST</div>
+      <h2 style="margin:0 0 16px;font:800 40px/1.08 'Bricolage Grotesque',sans-serif;letter-spacing:-1.6px">Markets as easy as payments</h2>
+      <p style="color:#6E6787;font-size:16.5px;line-height:1.65;margin:0 0 28px">Create a market, stream quotes, settle outcomes. Escrow, oracle resolution, and regulatory reporting run under the hood — you ship product.</p>
+      <button onClick="{{ goDocs }}" style="background:#fff;border:1px solid rgba(29,24,50,.14);color:#1D1832;font:700 15px 'Instrument Sans',sans-serif;padding:13px 24px;border-radius:999px;cursor:pointer" style-hover="border-color:#F0568C;color:#D6336C">Read the docs →</button>
+    </div>
+    <div style="background:#1D1633;border-radius:18px;overflow:hidden;box-shadow:0 30px 70px rgba(29,22,51,.35)">
+      <div style="display:flex;align-items:center;gap:7px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.08)">
+        <span style="width:11px;height:11px;border-radius:50%;background:#FF8FB5"></span><span style="width:11px;height:11px;border-radius:50%;background:#FFCB8E"></span><span style="width:11px;height:11px;border-radius:50%;background:#3ADFA5"></span>
+        <span style="margin-left:10px;font:500 12px 'JetBrains Mono',monospace;color:#8B84A3">create_market.js</span>
+      </div>
+      <pre style="margin:0;padding:24px 26px;font:500 13.5px/1.8 'JetBrains Mono',monospace;color:#C9C2E0;overflow-x:auto"><code><span style="color:#FF8FB5">const</span> <span style="color:#9ECBFF">market</span> = <span style="color:#FF8FB5">await</span> probable.markets.<span style="color:#FFCB8E">create</span>({
+  <span style="color:#B9AEDB">question</span>: <span style="color:#3ADFA5">"Will BTC close above $150k in 2026?"</span>,
+  <span style="color:#B9AEDB">closes</span>: <span style="color:#3ADFA5">"2026-12-31T23:59:59Z"</span>,
+  <span style="color:#B9AEDB">oracle</span>: <span style="color:#3ADFA5">"oracle:consensus"</span>,
+  <span style="color:#B9AEDB">liquidity</span>: { <span style="color:#B9AEDB">seed</span>: <span style="color:#FFCB8E">50_000</span> }
+});
+<span style="color:#6E6489">// → live in 14ms, quotes streaming</span></code></pre>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div style="background:linear-gradient(115deg,#FFE3EC,#EFE9FF);clip-path:polygon(0 12%,100% 0,100% 100%,0 100%)">
+    <div style="max-width:760px;margin:0 auto;padding:120px 32px 96px;text-align:center">
+      <h2 style="margin:0 0 16px;font:800 46px/1.05 'Bricolage Grotesque',sans-serif;letter-spacing:-2px">Launch your first market today</h2>
+      <p style="color:#4A4363;font-size:17px;margin:0 0 32px">Start in the sandbox. Move to production when you're ready.</p>
+      <button onClick="{{ goOnboard }}" style="background:#1D1633;border:none;color:#fff;font:700 16px 'Instrument Sans',sans-serif;padding:16px 34px;border-radius:999px;cursor:pointer;transition:all .2s" style-hover="transform:translateY(-2px);box-shadow:0 14px 34px rgba(29,22,51,.3)">Get your API keys <span style="color:#FF8FB5">→</span></button>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ PRODUCT ============ -->
+<sc-if value="{{ isProduct }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Product" style="max-width:1180px;margin:0 auto;padding:72px 32px 96px">
+  <div style="font:600 12.5px 'JetBrains Mono',monospace;color:#D6336C;letter-spacing:1.6px;margin-bottom:16px">PRODUCT</div>
+  <h1 style="margin:0 0 14px;font:800 50px/1.02 'Bricolage Grotesque',sans-serif;letter-spacing:-2.2px">One API, three primitives</h1>
+  <p style="color:#6E6787;font-size:17px;max-width:560px;line-height:1.6;margin:0 0 56px">Compose Rails, Embeds, and Shield into any prediction-market experience.</p>
+  <div style="display:flex;flex-direction:column;gap:22px">
+    <sc-for list="{{ productBlocks }}" as="p" hint-placeholder-count="3">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:44px;background:#fff;border:1px solid rgba(29,24,50,.08);border-radius:20px;padding:42px;align-items:center;transition:box-shadow .25s" style-hover="box-shadow:0 20px 50px rgba(74,42,90,.1)">
+        <div>
+          <div style="display:inline-block;font:600 11px 'JetBrains Mono',monospace;color:{{ p.tagColor }};background:{{ p.tagBg }};border-radius:999px;padding:5px 13px;margin-bottom:18px;letter-spacing:.6px">{{ p.tag }}</div>
+          <div style="font:700 27px 'Bricolage Grotesque',sans-serif;letter-spacing:-.8px;margin-bottom:12px">{{ p.title }}</div>
+          <div style="color:#6E6787;font-size:15.5px;line-height:1.65;margin-bottom:22px">{{ p.body }}</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ p.points }}" as="pt" hint-placeholder-count="3">
+              <div style="display:flex;gap:10px;align-items:center;font-size:14.5px;color:#4A4363"><span style="color:#17B877;font-weight:700">✓</span>{{ pt }}</div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="background:#1D1633;border-radius:15px;padding:22px 24px;font:500 12.5px/1.75 'JetBrains Mono',monospace;color:#B9AEDB;white-space:pre-wrap">{{ p.snippet }}</div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="margin-top:88px">
+    <div style="font:600 12.5px 'JetBrains Mono',monospace;color:#0E9160;letter-spacing:1.6px;margin-bottom:16px">USE CASES</div>
+    <h2 style="margin:0 0 40px;font:800 38px/1.06 'Bricolage Grotesque',sans-serif;letter-spacing:-1.5px">Who builds on Probable</h2>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+      <sc-for list="{{ useCases }}" as="u" hint-placeholder-count="6">
+        <div style="background:#fff;border:1px solid rgba(29,24,50,.08);border-radius:18px;padding:28px;transition:all .25s" style-hover="transform:translateY(-4px);box-shadow:0 16px 38px rgba(74,42,90,.1)">
+          <div style="font:600 12px 'JetBrains Mono',monospace;color:{{ u.kColor }};margin-bottom:12px;letter-spacing:.8px">{{ u.k }}</div>
+          <div style="font:700 18.5px 'Bricolage Grotesque',sans-serif;margin-bottom:9px;letter-spacing:-.3px">{{ u.title }}</div>
+          <div style="color:#6E6787;font-size:14px;line-height:1.62">{{ u.body }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ PRICING ============ -->
+<sc-if value="{{ isPricing }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Pricing" style="max-width:1180px;margin:0 auto;padding:72px 32px 96px">
+  <div style="text-align:center;margin-bottom:56px">
+    <div style="font:600 12.5px 'JetBrains Mono',monospace;color:#D6336C;letter-spacing:1.6px;margin-bottom:16px">PRICING</div>
+    <h1 style="margin:0 0 14px;font:800 50px/1.02 'Bricolage Grotesque',sans-serif;letter-spacing:-2.2px">Pay per settled dollar</h1>
+    <p style="color:#6E6787;font-size:17px;margin:0">No monthly fees. No minimums. Volume discounts built in.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:64px;align-items:start">
+    <sc-for list="{{ tiers }}" as="t" hint-placeholder-count="3">
+      <div style="background:{{ t.bg }};border:1.5px solid {{ t.border }};border-radius:20px;padding:34px;position:relative;transition:transform .2s" style-hover="transform:translateY(-4px)">
+        <sc-if value="{{ t.popular }}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:#F0568C;color:#fff;font:700 10.5px 'JetBrains Mono',monospace;padding:5px 14px;border-radius:999px;letter-spacing:.8px">MOST POPULAR</div>
+        </sc-if>
+        <div style="font:700 21px 'Bricolage Grotesque',sans-serif;margin-bottom:6px;color:{{ t.ink }}">{{ t.name }}</div>
+        <div style="color:{{ t.muted }};font-size:13.5px;margin-bottom:22px;min-height:36px;line-height:1.45">{{ t.desc }}</div>
+        <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:24px"><span style="font:600 42px 'JetBrains Mono',monospace;letter-spacing:-2.5px;color:{{ t.ink }}">{{ t.rate }}</span><span style="color:{{ t.muted }};font-size:14px">{{ t.unit }}</span></div>
+        <div style="display:flex;flex-direction:column;gap:11px;margin-bottom:28px">
+          <sc-for list="{{ t.feats }}" as="f" hint-placeholder-count="4">
+            <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:{{ t.featColor }}"><span style="color:#17B877;font-weight:700">✓</span>{{ f }}</div>
+          </sc-for>
+        </div>
+        <button style="width:100%;background:{{ t.btnBg }};border:1px solid {{ t.btnBorder }};color:{{ t.btnColor }};font:700 15px 'Instrument Sans',sans-serif;padding:13px 0;border-radius:999px;cursor:pointer;transition:all .2s" style-hover="transform:translateY(-1px);filter:brightness(1.1)">{{ t.cta }}</button>
+      </div>
+    </sc-for>
+  </div>
+  <div style="max-width:780px;margin:0 auto;background:#fff;border:1px solid rgba(29,24,50,.09);border-radius:20px;padding:38px;box-shadow:0 16px 44px rgba(74,42,90,.08)">
+    <div style="font:700 23px 'Bricolage Grotesque',sans-serif;letter-spacing:-.5px;margin-bottom:6px">Estimate your fees</div>
+    <div style="color:#6E6787;font-size:14px;margin-bottom:30px">Drag to your expected monthly settled volume.</div>
+    <input type="range" min="0" max="100" value="{{ volSlider }}" onChange="{{ onVol }}" onInput="{{ onVol }}" style="width:100%;--fill:{{ volFill }}">
+    <div style="display:flex;justify-content:space-between;margin-top:28px;gap:16px">
+      <div style="flex:1;background:#FFFBF7;border:1px solid rgba(29,24,50,.08);border-radius:14px;padding:18px 20px"><div style="font:600 10.5px 'JetBrains Mono',monospace;color:#A9A2BE;letter-spacing:1px;margin-bottom:7px">MONTHLY VOLUME</div><div style="font:600 26px 'JetBrains Mono',monospace;letter-spacing:-1.5px">{{ volStr }}</div></div>
+      <div style="flex:1;background:#FFFBF7;border:1px solid rgba(29,24,50,.08);border-radius:14px;padding:18px 20px"><div style="font:600 10.5px 'JetBrains Mono',monospace;color:#A9A2BE;letter-spacing:1px;margin-bottom:7px">YOUR RATE</div><div style="font:600 26px 'JetBrains Mono',monospace;letter-spacing:-1.5px;color:#D6336C">{{ rateStr }}</div></div>
+      <div style="flex:1;background:rgba(23,184,119,.07);border:1px solid rgba(23,184,119,.3);border-radius:14px;padding:18px 20px"><div style="font:600 10.5px 'JetBrains Mono',monospace;color:#0E9160;letter-spacing:1px;margin-bottom:7px">EST. MONTHLY FEE</div><div style="font:600 26px 'JetBrains Mono',monospace;letter-spacing:-1.5px;color:#0E9160">{{ feeStr }}</div></div>
+    </div>
+  </div>
+  <!-- COMPARISON -->
+  <div style="margin-top:72px">
+    <h2 style="margin:0 0 28px;font:800 32px 'Bricolage Grotesque',sans-serif;letter-spacing:-1.2px;text-align:center">Compare plans</h2>
+    <div style="background:#fff;border:1px solid rgba(29,24,50,.09);border-radius:18px;overflow:hidden">
+      <div style="display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:14px;padding:16px 26px;border-bottom:1px solid rgba(29,24,50,.08);background:#FFFBF7">
+        <span style="font:600 10.5px 'JetBrains Mono',monospace;color:#A9A2BE;letter-spacing:1px;align-self:center">CAPABILITY</span>
+        <span style="font:700 14px 'Bricolage Grotesque',sans-serif">Sandbox</span>
+        <span style="font:700 14px 'Bricolage Grotesque',sans-serif;color:#D6336C">Scale</span>
+        <span style="font:700 14px 'Bricolage Grotesque',sans-serif">Platform</span>
+      </div>
+      <sc-for list="{{ compRows }}" as="cr" hint-placeholder-count="8">
+        <div style="display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:14px;padding:14px 26px;border-bottom:1px solid rgba(29,24,50,.05);font-size:14px;align-items:center">
+          <span style="font-weight:600;color:#4A4363">{{ cr.feat }}</span>
+          <span style="color:{{ cr.aC }};font:500 13.5px 'Instrument Sans',sans-serif">{{ cr.a }}</span>
+          <span style="color:{{ cr.bC }};font:500 13.5px 'Instrument Sans',sans-serif">{{ cr.b }}</span>
+          <span style="color:{{ cr.cC }};font:500 13.5px 'Instrument Sans',sans-serif">{{ cr.c }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  <!-- FAQ -->
+  <div style="margin-top:72px;max-width:720px;margin-left:auto;margin-right:auto">
+    <h2 style="margin:0 0 28px;font:800 32px 'Bricolage Grotesque',sans-serif;letter-spacing:-1.2px;text-align:center">Frequently asked</h2>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <sc-for list="{{ faqs }}" as="fq" hint-placeholder-count="5">
+        <div style="background:#fff;border:1px solid rgba(29,24,50,.09);border-radius:14px;overflow:hidden">
+          <button onClick="{{ fq.toggle }}" style="width:100%;display:flex;justify-content:space-between;align-items:center;gap:14px;background:none;border:none;padding:18px 22px;cursor:pointer;text-align:left;font:600 15.5px 'Instrument Sans',sans-serif;color:#1D1832">{{ fq.q }}<span style="color:#D6336C;font-size:18px;flex:none">{{ fq.chev }}</span></button>
+          <sc-if value="{{ fq.open }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:0 22px 20px;color:#6E6787;font-size:14.5px;line-height:1.65">{{ fq.a }}</div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ DOCS ============ -->
+<sc-if value="{{ isDocs }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Docs" style="max-width:1180px;margin:0 auto;padding:48px 32px 96px;display:grid;grid-template-columns:230px 1fr;gap:48px;align-items:start">
+  <div style="position:sticky;top:98px;display:flex;flex-direction:column;gap:3px">
+    <sc-for list="{{ docNavGroups }}" as="g" hint-placeholder-count="2">
+      <div style="font:600 10.5px 'JetBrains Mono',monospace;color:#A9A2BE;letter-spacing:1.4px;padding:14px 14px 10px">{{ g.label }}</div>
+      <sc-for list="{{ g.items }}" as="d" hint-placeholder-count="4">
+        <button onClick="{{ d.go }}" style="text-align:left;background:{{ d.bg }};border:none;color:{{ d.color }};font:600 14px 'Instrument Sans',sans-serif;padding:9px 14px;border-radius:10px;cursor:pointer;transition:background .15s" style-hover="background:rgba(29,24,50,.05)">{{ d.label }}</button>
+      </sc-for>
+    </sc-for>
+    <div style="margin-top:22px;background:linear-gradient(115deg,#FFE3EC,#EFE9FF);border-radius:14px;padding:18px">
+      <div style="font:700 14px 'Bricolage Grotesque',sans-serif;margin-bottom:6px">Sandbox is free</div>
+      <div style="font-size:12.5px;color:#4A4363;line-height:1.5;margin-bottom:12px">Test with play-money liquidity, unlimited calls.</div>
+      <button onClick="{{ goOnboard }}" style="background:#1D1633;border:none;color:#fff;font:600 12.5px 'Instrument Sans',sans-serif;padding:8px 15px;border-radius:999px;cursor:pointer">Get keys →</button>
+    </div>
+  </div>
+  <div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <span style="font:700 11px 'JetBrains Mono',monospace;color:#fff;background:{{ docSection.methodBg }};padding:4px 10px;border-radius:7px;letter-spacing:.5px">{{ docSection.method }}</span>
+      <span style="font:600 15px 'JetBrains Mono',monospace;color:#6E6787">{{ docSection.path }}</span>
+    </div>
+    <h1 style="margin:0 0 14px;font:800 36px/1.06 'Bricolage Grotesque',sans-serif;letter-spacing:-1.4px">{{ docSection.title }}</h1>
+    <p style="color:#6E6787;font-size:16px;line-height:1.65;max-width:560px;margin:0 0 34px">{{ docSection.desc }}</p>
+    <div style="font:600 12px 'JetBrains Mono',monospace;color:#A9A2BE;letter-spacing:1.2px;margin-bottom:14px">{{ docSection.paramsLabel }}</div>
+    <div style="border:1px solid rgba(29,24,50,.09);border-radius:14px;overflow:hidden;margin-bottom:36px;background:#fff">
+      <sc-for list="{{ docSection.params }}" as="pr" hint-placeholder-count="4">
+        <div style="display:grid;grid-template-columns:190px 110px 1fr;gap:16px;padding:15px 20px;border-bottom:1px solid rgba(29,24,50,.06);font-size:14px;align-items:baseline">
+          <span style="font:600 13px 'JetBrains Mono',monospace;color:#1D1832">{{ pr.name }}</span>
+          <span style="font:500 11.5px 'JetBrains Mono',monospace;color:{{ pr.typeColor }}">{{ pr.type }}</span>
+          <span style="color:#6E6787;line-height:1.55">{{ pr.desc }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="font:600 12px 'JetBrains Mono',monospace;color:#A9A2BE;letter-spacing:1.2px;margin-bottom:14px">EXAMPLE</div>
+    <div style="background:#1D1633;border-radius:15px;padding:22px 26px;font:500 13px/1.8 'JetBrains Mono',monospace;color:#B9AEDB;white-space:pre-wrap;box-shadow:0 16px 40px rgba(29,22,51,.2)">{{ docSection.example }}</div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ DASHBOARD ============ -->
+<sc-if value="{{ isDash }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Dashboard" style="max-width:1180px;margin:0 auto;padding:40px 32px 96px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <h1 style="margin:0;font:800 32px 'Bricolage Grotesque',sans-serif;letter-spacing:-1.2px">Acme Sportsbook</h1>
+        <span style="display:flex;align-items:center;gap:6px;font:600 11px 'JetBrains Mono',monospace;color:#0E9160;background:rgba(23,184,119,.1);border:1px solid rgba(23,184,119,.3);padding:5px 12px;border-radius:999px"><span style="width:6px;height:6px;border-radius:50%;background:#17B877;animation:pulse 2s infinite"></span>LIVE MODE</span>
+      </div>
+      <div style="color:#6E6787;font-size:14px;margin-top:6px">acct_9K2mPx · Production</div>
+    </div>
+    <button style="background:#1D1633;border:none;color:#fff;font:600 14px 'Instrument Sans',sans-serif;padding:11px 20px;border-radius:999px;cursor:pointer" style-hover="background:#2E2352">+ New market</button>
+  </div>
+  <div style="display:flex;gap:4px;margin:24px 0 26px;border-bottom:1px solid rgba(29,24,50,.09)">
+    <sc-for list="{{ dashTabs }}" as="dt" hint-placeholder-count="5">
+      <button onClick="{{ dt.go }}" style="background:none;border:none;border-bottom:2.5px solid {{ dt.line }};color:{{ dt.color }};font:600 14px 'Instrument Sans',sans-serif;padding:10px 16px;cursor:pointer;margin-bottom:-1px" style-hover="color:#1D1832">{{ dt.label }}</button>
+    </sc-for>
+  </div>
+  <sc-if value="{{ isDashOv }}" hint-placeholder-val="{{ true }}">
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px">
+    <sc-for list="{{ dashStats }}" as="s" hint-placeholder-count="4">
+      <div style="background:#fff;border:1px solid rgba(29,24,50,.08);border-radius:16px;padding:20px 22px">
+        <div style="font:600 10.5px 'JetBrains Mono',monospace;color:#A9A2BE;letter-spacing:1px;margin-bottom:10px">{{ s.label }}</div>
+        <div style="display:flex;align-items:baseline;gap:10px"><span style="font:600 26px 'JetBrains Mono',monospace;letter-spacing:-1.5px">{{ s.value }}</span><span style="font:600 12px 'JetBrains Mono',monospace;color:{{ s.deltaColor }}">{{ s.delta }}</span></div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-bottom:22px">
+    <div style="background:#fff;border:1px solid rgba(29,24,50,.08);border-radius:16px;padding:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+        <div style="font:700 16px 'Bricolage Grotesque',sans-serif">Settled volume</div>
+        <div style="display:flex;gap:6px">
+          <span style="font:600 11px 'JetBrains Mono',monospace;color:#D6336C;background:rgba(240,86,140,.1);padding:4px 11px;border-radius:999px">30D</span>
+          <span style="font:600 11px 'JetBrains Mono',monospace;color:#A9A2BE;padding:4px 11px;border-radius:999px;cursor:pointer" style-hover="color:#6E6787">90D</span>
+        </div>
+      </div>
+      <svg width="100%" height="180" viewBox="0 0 600 180" preserveAspectRatio="none">
+        <path d="{{ areaPath }}" fill="url(#pgrad)" opacity="0.9"></path>
+        <path d="{{ linePath }}" fill="none" stroke="#F0568C" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linecap="round"></path>
+        <defs><linearGradient id="pgrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(240,86,140,.22)"></stop><stop offset="100%" stop-color="rgba(240,86,140,0)"></stop></linearGradient></defs>
+      </svg>
+      <div style="display:flex;justify-content:space-between;font:500 10.5px 'JetBrains Mono',monospace;color:#A9A2BE;margin-top:8px"><span>JUN 18</span><span>JUN 28</span><span>JUL 8</span><span>JUL 18</span></div>
+    </div>
+    <div style="background:#fff;border:1px solid rgba(29,24,50,.08);border-radius:16px;padding:24px">
+      <div style="font:700 16px 'Bricolage Grotesque',sans-serif;margin-bottom:16px">Recent payouts</div>
+      <div style="display:flex;flex-direction:column;gap:13px">
+        <sc-for list="{{ payouts }}" as="po" hint-placeholder-count="5">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+            <div style="display:flex;align-items:center;gap:11px;min-width:0">
+              <span style="width:32px;height:32px;border-radius:10px;background:{{ po.avatarBg }};display:flex;align-items:center;justify-content:center;font:700 11px 'JetBrains Mono',monospace;color:{{ po.avatarColor }};flex:none">{{ po.initials }}</span>
+              <div style="min-width:0"><div style="font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ po.who }}</div><div style="font:500 11px 'JetBrains Mono',monospace;color:#A9A2BE">{{ po.when }}</div></div>
+            </div>
+            <span style="font:600 13.5px 'JetBrains Mono',monospace;color:#0E9160;flex:none">{{ po.amt }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+  <div style="background:#fff;border:1px solid rgba(29,24,50,.08);border-radius:16px;overflow:hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px 14px">
+      <div style="font:700 16px 'Bricolage Grotesque',sans-serif">Active markets</div>
+      <span style="font:600 12.5px 'Instrument Sans',sans-serif;color:#D6336C;cursor:pointer">View all →</span>
+    </div>
+    <div style="display:grid;grid-template-columns:2.4fr .8fr .8fr 1fr .9fr;gap:14px;padding:10px 24px;font:600 10.5px 'JetBrains Mono',monospace;color:#A9A2BE;letter-spacing:1px;border-bottom:1px solid rgba(29,24,50,.07)">
+      <span>MARKET</span><span>YES</span><span>NO</span><span>24H VOLUME</span><span>STATUS</span>
+    </div>
+    <sc-for list="{{ dashMarkets }}" as="dm" hint-placeholder-count="6">
+      <div style="display:grid;grid-template-columns:2.4fr .8fr .8fr 1fr .9fr;gap:14px;padding:15px 24px;border-bottom:1px solid rgba(29,24,50,.05);align-items:center;font-size:14px;transition:background .15s" style-hover="background:#FFFBF7">
+        <div style="display:flex;align-items:center;gap:12px;min-width:0">
+          <svg width="54" height="22" viewBox="0 0 100 32" preserveAspectRatio="none" style="flex:none"><path d="{{ dm.spark }}" fill="none" stroke="{{ dm.sparkColor }}" stroke-width="3" vector-effect="non-scaling-stroke" stroke-linecap="round"></path></svg>
+          <span style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ dm.q }}</span>
+        </div>
+        <span style="font:600 13.5px 'JetBrains Mono',monospace;color:#0E9160">{{ dm.yesStr }}¢</span>
+        <span style="font:600 13.5px 'JetBrains Mono',monospace;color:#D4491F">{{ dm.noStr }}¢</span>
+        <span style="font:500 13.5px 'JetBrains Mono',monospace;color:#6E6787">{{ dm.vol }}</span>
+        <span style="display:inline-flex;align-items:center;gap:6px;font:600 11px 'JetBrains Mono',monospace;color:{{ dm.stColor }};background:{{ dm.stBg }};padding:4px 11px;border-radius:999px;width:fit-content"><span style="width:5px;height:5px;border-radius:50%;background:{{ dm.stColor }}"></span>{{ dm.status }}</span>
+      </div>
+    </sc-for>
+  </div>
+  </sc-if>
+
+  <!-- MARKETS TAB -->
+  <sc-if value="{{ isDashMk }}" hint-placeholder-val="{{ false }}">
+  <div style="display:flex;gap:8px;margin-bottom:18px;align-items:center;flex-wrap:wrap">
+    <input placeholder="Search markets…" style="flex:1;max-width:300px;background:#fff;border:1px solid rgba(29,24,50,.12);border-radius:999px;padding:10px 18px;font:500 13.5px 'Instrument Sans',sans-serif;color:#1D1832;outline:none">
+    <sc-for list="{{ mkFilters }}" as="mf" hint-placeholder-count="5">
+      <button onClick="{{ mf.go }}" style="background:{{ mf.bg }};border:1px solid {{ mf.border }};color:{{ mf.color }};font:600 11.5px 'JetBrains Mono',monospace;padding:7px 14px;border-radius:999px;cursor:pointer;transition:all .15s" style-hover="border-color:#F0568C">{{ mf.label }}</button>
+    </sc-for>
+  </div>
+  <div style="background:#fff;border:1px solid rgba(29,24,50,.08);border-radius:16px;overflow:hidden">
+    <div style="display:grid;grid-template-columns:2.2fr .9fr .6fr .6fr .9fr .9fr .8fr .9fr;gap:12px;padding:12px 24px;font:600 10.5px 'JetBrains Mono',monospace;color:#A9A2BE;letter-spacing:1px;border-bottom:1px solid rgba(29,24,50,.07)">
+      <span>MARKET</span><span>CATEGORY</span><span>YES</span><span>NO</span><span>24H VOL</span><span>LIQUIDITY</span><span>CLOSES</span><span>STATUS</span>
+    </div>
+    <sc-for list="{{ dashMarketsFull }}" as="dm" hint-placeholder-count="6">
+      <div style="display:grid;grid-template-columns:2.2fr .9fr .6fr .6fr .9fr .9fr .8fr .9fr;gap:12px;padding:15px 24px;border-bottom:1px solid rgba(29,24,50,.05);align-items:center;font-size:13.5px;transition:background .15s" style-hover="background:#FFFBF7">
+        <span style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ dm.q }}</span>
+        <span style="font:600 11px 'JetBrains Mono',monospace;color:{{ dm.catColor }}">{{ dm.cat }}</span>
+        <span style="font:600 13px 'JetBrains Mono',monospace;color:#0E9160">{{ dm.yesStr }}¢</span>
+        <span style="font:600 13px 'JetBrains Mono',monospace;color:#D4491F">{{ dm.noStr }}¢</span>
+        <span style="font:500 13px 'JetBrains Mono',monospace;color:#6E6787">{{ dm.vol }}</span>
+        <span style="font:500 13px 'JetBrains Mono',monospace;color:#6E6787">{{ dm.liq }}</span>
+        <span style="font:500 12px 'JetBrains Mono',monospace;color:#A9A2BE">{{ dm.closes }}</span>
+        <span style="display:inline-flex;align-items:center;gap:6px;font:600 10.5px 'JetBrains Mono',monospace;color:{{ dm.stColor }};background:{{ dm.stBg }};padding:4px 10px;border-radius:999px;width:fit-content"><span style="width:5px;height:5px;border-radius:50%;background:{{ dm.stColor }}"></span>{{ dm.status }}</span>
+      </div>
+    </sc-for>
+  </div>
+  </sc-if>
+
+  <!-- PAYOUTS TAB -->
+  <sc-if value="{{ isDashPo }}" hint-placeholder-val="{{ false }}">
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:22px">
+    <sc-for list="{{ balances }}" as="b" hint-placeholder-count="3">
+      <div style="background:#fff;border:1px solid rgba(29,24,50,.08);border-radius:16px;padding:22px 24px">
+        <div style="font:600 10.5px 'JetBrains Mono',monospace;color:#A9A2BE;letter-spacing:1px;margin-bottom:10px">{{ b.label }}</div>
+        <div style="font:600 27px 'JetBrains Mono',monospace;letter-spacing:-1.5px;color:{{ b.color }}">{{ b.value }}</div>
+        <div style="font-size:12.5px;color:#A9A2BE;margin-top:6px">{{ b.sub }}</div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="background:#fff;border:1px solid rgba(29,24,50,.08);border-radius:16px;overflow:hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px 14px">
+      <div style="font:700 16px 'Bricolage Grotesque',sans-serif">Payout history</div>
+      <button style="background:#fff;border:1px solid rgba(29,24,50,.14);color:#1D1832;font:600 12.5px 'Instrument Sans',sans-serif;padding:8px 16px;border-radius:999px;cursor:pointer" style-hover="border-color:#F0568C;color:#D6336C">Export CSV</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1.4fr 2fr .8fr .9fr .9fr .8fr;gap:12px;padding:10px 24px;font:600 10.5px 'JetBrains Mono',monospace;color:#A9A2BE;letter-spacing:1px;border-bottom:1px solid rgba(29,24,50,.07)">
+      <span>RECIPIENT</span><span>MARKET</span><span>RAIL</span><span>AMOUNT</span><span>STATUS</span><span>TIME</span>
+    </div>
+    <sc-for list="{{ payoutRows }}" as="pr" hint-placeholder-count="6">
+      <div style="display:grid;grid-template-columns:1.4fr 2fr .8fr .9fr .9fr .8fr;gap:12px;padding:15px 24px;border-bottom:1px solid rgba(29,24,50,.05);align-items:center;font-size:13.5px;transition:background .15s" style-hover="background:#FFFBF7">
+        <span style="font-weight:600">{{ pr.who }}</span>
+        <span style="color:#6E6787;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ pr.market }}</span>
+        <span style="font:600 11px 'JetBrains Mono',monospace;color:#7A4599">{{ pr.rail }}</span>
+        <span style="font:600 13px 'JetBrains Mono',monospace;color:#0E9160">{{ pr.amt }}</span>
+        <span style="display:inline-flex;font:600 10.5px 'JetBrains Mono',monospace;color:{{ pr.stColor }};background:{{ pr.stBg }};padding:4px 10px;border-radius:999px;width:fit-content">{{ pr.status }}</span>
+        <span style="font:500 12px 'JetBrains Mono',monospace;color:#A9A2BE">{{ pr.when }}</span>
+      </div>
+    </sc-for>
+  </div>
+  </sc-if>
+
+  <!-- COMPLIANCE TAB -->
+  <sc-if value="{{ isDashCo }}" hint-placeholder-val="{{ false }}">
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:22px">
+    <sc-for list="{{ kycStats }}" as="ks" hint-placeholder-count="3">
+      <div style="background:#fff;border:1px solid rgba(29,24,50,.08);border-radius:16px;padding:22px 24px">
+        <div style="font:600 10.5px 'JetBrains Mono',monospace;color:#A9A2BE;letter-spacing:1px;margin-bottom:10px">{{ ks.label }}</div>
+        <div style="font:600 27px 'JetBrains Mono',monospace;letter-spacing:-1.5px;color:{{ ks.color }}">{{ ks.value }}</div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="background:#fff;border:1px solid rgba(29,24,50,.08);border-radius:16px;overflow:hidden;margin-bottom:22px">
+    <div style="font:700 16px 'Bricolage Grotesque',sans-serif;padding:20px 24px 14px">Review queue</div>
+    <div style="display:grid;grid-template-columns:1.2fr 1fr .8fr .9fr .9fr .8fr;gap:12px;padding:10px 24px;font:600 10.5px 'JetBrains Mono',monospace;color:#A9A2BE;letter-spacing:1px;border-bottom:1px solid rgba(29,24,50,.07)">
+      <span>USER</span><span>JURISDICTION</span><span>TIER</span><span>FLAG</span><span>STATUS</span><span>SUBMITTED</span>
+    </div>
+    <sc-for list="{{ kycQueue }}" as="kq" hint-placeholder-count="5">
+      <div style="display:grid;grid-template-columns:1.2fr 1fr .8fr .9fr .9fr .8fr;gap:12px;padding:15px 24px;border-bottom:1px solid rgba(29,24,50,.05);align-items:center;font-size:13.5px;transition:background .15s" style-hover="background:#FFFBF7">
+        <span style="font:600 13px 'JetBrains Mono',monospace">{{ kq.user }}</span>
+        <span style="color:#6E6787">{{ kq.juris }}</span>
+        <span style="font:600 11px 'JetBrains Mono',monospace;color:#7A4599">{{ kq.tier }}</span>
+        <span style="color:#6E6787;font-size:12.5px">{{ kq.flag }}</span>
+        <span style="display:inline-flex;font:600 10.5px 'JetBrains Mono',monospace;color:{{ kq.stColor }};background:{{ kq.stBg }};padding:4px 10px;border-radius:999px;width:fit-content">{{ kq.status }}</span>
+        <span style="font:500 12px 'JetBrains Mono',monospace;color:#A9A2BE">{{ kq.when }}</span>
+      </div>
+    </sc-for>
+  </div>
+  <div style="background:#fff;border:1px solid rgba(29,24,50,.08);border-radius:16px;padding:24px">
+    <div style="font:700 16px 'Bricolage Grotesque',sans-serif;margin-bottom:6px">Jurisdiction coverage</div>
+    <div style="color:#6E6787;font-size:13.5px;margin-bottom:18px">Where your users can currently trade, per Shield policy v14.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      <sc-for list="{{ jurisChips }}" as="jc" hint-placeholder-count="12">
+        <span style="display:inline-flex;align-items:center;gap:7px;font:600 12px 'JetBrains Mono',monospace;color:{{ jc.color }};background:{{ jc.bg }};padding:6px 13px;border-radius:999px"><span style="width:6px;height:6px;border-radius:50%;background:{{ jc.dot }}"></span>{{ jc.label }}</span>
+      </sc-for>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- DEVELOPERS TAB -->
+  <sc-if value="{{ isDashDev }}" hint-placeholder-val="{{ false }}">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:22px">
+    <div style="background:#fff;border:1px solid rgba(29,24,50,.08);border-radius:16px;padding:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="font:700 16px 'Bricolage Grotesque',sans-serif">API keys</div>
+        <button style="background:#1D1633;border:none;color:#fff;font:600 12px 'Instrument Sans',sans-serif;padding:7px 14px;border-radius:999px;cursor:pointer">+ Create key</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <sc-for list="{{ apiKeys }}" as="ak" hint-placeholder-count="2">
+          <div style="background:#FFFBF7;border:1px solid rgba(29,24,50,.08);border-radius:12px;padding:15px 18px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+              <span style="font-weight:700;font-size:13.5px">{{ ak.name }}</span>
+              <span style="font:600 10px 'JetBrains Mono',monospace;color:{{ ak.envColor }};background:{{ ak.envBg }};padding:3px 9px;border-radius:999px">{{ ak.env }}</span>
+            </div>
+            <div style="font:500 12.5px 'JetBrains Mono',monospace;color:#6E6787;margin-bottom:7px">{{ ak.key }}</div>
+            <div style="font-size:11.5px;color:#A9A2BE">Created {{ ak.created }} · Last used {{ ak.last }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="background:#fff;border:1px solid rgba(29,24,50,.08);border-radius:16px;padding:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="font:700 16px 'Bricolage Grotesque',sans-serif">Webhooks</div>
+        <button style="background:#fff;border:1px solid rgba(29,24,50,.14);color:#1D1832;font:600 12px 'Instrument Sans',sans-serif;padding:7px 14px;border-radius:999px;cursor:pointer" style-hover="border-color:#F0568C;color:#D6336C">+ Add endpoint</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <sc-for list="{{ webhooks }}" as="wh" hint-placeholder-count="2">
+          <div style="background:#FFFBF7;border:1px solid rgba(29,24,50,.08);border-radius:12px;padding:15px 18px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+              <span style="font:600 12.5px 'JetBrains Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ wh.url }}</span>
+              <span style="display:flex;align-items:center;gap:6px;font:600 11px 'JetBrains Mono',monospace;color:#0E9160;flex:none"><span style="width:5px;height:5px;border-radius:50%;background:#17B877"></span>{{ wh.ok }}</span>
+            </div>
+            <div style="font-size:11.5px;color:#A9A2BE">{{ wh.events }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+  <div style="background:#fff;border:1px solid rgba(29,24,50,.08);border-radius:16px;overflow:hidden">
+    <div style="font:700 16px 'Bricolage Grotesque',sans-serif;padding:20px 24px 14px">Request log</div>
+    <div style="display:grid;grid-template-columns:.6fr 2fr .6fr .6fr .9fr;gap:12px;padding:10px 24px;font:600 10.5px 'JetBrains Mono',monospace;color:#A9A2BE;letter-spacing:1px;border-bottom:1px solid rgba(29,24,50,.07)">
+      <span>METHOD</span><span>PATH</span><span>STATUS</span><span>LATENCY</span><span>TIME</span>
+    </div>
+    <sc-for list="{{ reqLog }}" as="rl" hint-placeholder-count="7">
+      <div style="display:grid;grid-template-columns:.6fr 2fr .6fr .6fr .9fr;gap:12px;padding:13px 24px;border-bottom:1px solid rgba(29,24,50,.05);align-items:center;font:500 12.5px 'JetBrains Mono',monospace;transition:background .15s" style-hover="background:#FFFBF7">
+        <span style="font-weight:600;color:{{ rl.mColor }}">{{ rl.method }}</span>
+        <span style="color:#4A4363">{{ rl.path }}</span>
+        <span style="font-weight:600;color:{{ rl.stColor }}">{{ rl.status }}</span>
+        <span style="color:#6E6787">{{ rl.ms }}</span>
+        <span style="color:#A9A2BE">{{ rl.when }}</span>
+      </div>
+    </sc-for>
+  </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<!-- ============ ONBOARDING ============ -->
+<sc-if value="{{ isOnboard }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Onboarding" style="max-width:760px;margin:0 auto;padding:64px 32px 120px">
+  <div style="text-align:center;margin-bottom:38px">
+    <h1 style="margin:0 0 12px;font:800 38px 'Bricolage Grotesque',sans-serif;letter-spacing:-1.5px">Activate your account</h1>
+    <p style="color:#6E6787;font-size:15.5px;margin:0">Four steps. Most accounts are live the same day.</p>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:36px">
+    <sc-for list="{{ onbSteps }}" as="os" hint-placeholder-count="4">
+      <div style="display:flex;align-items:center">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:110px">
+          <div style="width:34px;height:34px;border-radius:50%;background:{{ os.circleBg }};color:{{ os.circleColor }};display:flex;align-items:center;justify-content:center;font:700 13px 'JetBrains Mono',monospace;border:2px solid {{ os.circleBorder }};transition:all .3s">{{ os.n }}</div>
+          <span style="font:600 12px 'Instrument Sans',sans-serif;color:{{ os.labelColor }}">{{ os.label }}</span>
+        </div>
+        <sc-if value="{{ os.hasLine }}" hint-placeholder-val="{{ true }}">
+          <div style="width:56px;height:2px;background:{{ os.lineBg }};margin:0 -18px 26px;transition:background .3s"></div>
+        </sc-if>
+      </div>
+    </sc-for>
+  </div>
+  <div style="background:#fff;border:1px solid rgba(29,24,50,.09);border-radius:22px;padding:40px;box-shadow:0 20px 50px rgba(74,42,90,.08)">
+    <sc-if value="{{ onb1 }}" hint-placeholder-val="{{ true }}">
+      <div style="font:700 21px 'Bricolage Grotesque',sans-serif;margin-bottom:24px">Company details</div>
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div><div style="font-weight:600;font-size:13.5px;margin-bottom:7px">Legal company name</div><input placeholder="Acme, Inc." style="width:100%;background:#FFFBF7;border:1px solid rgba(29,24,50,.12);border-radius:11px;padding:12px 16px;font:500 14.5px 'Instrument Sans',sans-serif;color:#1D1832;outline:none"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div><div style="font-weight:600;font-size:13.5px;margin-bottom:7px">Website</div><input placeholder="https://acme.com" style="width:100%;background:#FFFBF7;border:1px solid rgba(29,24,50,.12);border-radius:11px;padding:12px 16px;font:500 14.5px 'Instrument Sans',sans-serif;color:#1D1832;outline:none"></div>
+          <div><div style="font-weight:600;font-size:13.5px;margin-bottom:7px">Country of incorporation</div><input placeholder="United States" style="width:100%;background:#FFFBF7;border:1px solid rgba(29,24,50,.12);border-radius:11px;padding:12px 16px;font:500 14.5px 'Instrument Sans',sans-serif;color:#1D1832;outline:none"></div>
+        </div>
+        <div>
+          <div style="font-weight:600;font-size:13.5px;margin-bottom:9px">Entity type</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <sc-for list="{{ entChips }}" as="ec" hint-placeholder-count="4">
+              <button onClick="{{ ec.go }}" style="background:{{ ec.bg }};border:1.5px solid {{ ec.border }};color:{{ ec.color }};font:600 13px 'Instrument Sans',sans-serif;padding:9px 18px;border-radius:999px;cursor:pointer;transition:all .15s">{{ ec.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ onb2 }}" hint-placeholder-val="{{ false }}">
+      <div style="font:700 21px 'Bricolage Grotesque',sans-serif;margin-bottom:24px">What are you building?</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:26px">
+        <sc-for list="{{ ucCards }}" as="uc" hint-placeholder-count="3">
+          <button onClick="{{ uc.go }}" style="text-align:left;background:{{ uc.bg }};border:1.5px solid {{ uc.border }};border-radius:15px;padding:18px;cursor:pointer;transition:all .15s">
+            <div style="font:700 15px 'Bricolage Grotesque',sans-serif;color:#1D1832;margin-bottom:6px">{{ uc.title }}</div>
+            <div style="font:400 12.5px 'Instrument Sans',sans-serif;color:#6E6787;line-height:1.5">{{ uc.body }}</div>
+          </button>
+        </sc-for>
+      </div>
+      <div style="font-weight:600;font-size:13.5px;margin-bottom:9px">Expected monthly settled volume</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <sc-for list="{{ volChips }}" as="vc" hint-placeholder-count="4">
+          <button onClick="{{ vc.go }}" style="background:{{ vc.bg }};border:1.5px solid {{ vc.border }};color:{{ vc.color }};font:600 13px 'JetBrains Mono',monospace;padding:9px 18px;border-radius:999px;cursor:pointer;transition:all .15s">{{ vc.label }}</button>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{ onb3 }}" hint-placeholder-val="{{ false }}">
+      <div style="font:700 21px 'Bricolage Grotesque',sans-serif;margin-bottom:8px">Compliance review</div>
+      <div style="color:#6E6787;font-size:14px;margin-bottom:24px">Shield runs these checks automatically. Nothing to upload for sandbox access.</div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px">
+        <sc-for list="{{ shieldChecks }}" as="sc" hint-placeholder-count="4">
+          <div style="display:flex;justify-content:space-between;align-items:center;background:#FFFBF7;border:1px solid rgba(29,24,50,.08);border-radius:13px;padding:16px 20px">
+            <div><div style="font-weight:700;font-size:14.5px;margin-bottom:3px">{{ sc.title }}</div><div style="font-size:12.5px;color:#A9A2BE">{{ sc.sub }}</div></div>
+            <span style="display:inline-flex;align-items:center;gap:6px;font:600 11px 'JetBrains Mono',monospace;color:{{ sc.stColor }};background:{{ sc.stBg }};padding:5px 12px;border-radius:999px;flex:none"><span style="width:5px;height:5px;border-radius:50%;background:{{ sc.stColor }}"></span>{{ sc.status }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="background:linear-gradient(115deg,#FFE3EC,#EFE9FF);border-radius:13px;padding:16px 20px;font-size:13px;color:#4A4363;line-height:1.55">Production activation requires business verification — typically approved within one business day. Sandbox keys are issued immediately.</div>
+    </sc-if>
+    <sc-if value="{{ onb4 }}" hint-placeholder-val="{{ false }}">
+      <div style="text-align:center;margin-bottom:26px">
+        <div style="width:56px;height:56px;border-radius:50%;background:rgba(23,184,119,.12);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:24px;color:#0E9160;font-weight:700">✓</div>
+        <div style="font:700 23px 'Bricolage Grotesque',sans-serif;margin-bottom:6px">Your keys are ready</div>
+        <div style="color:#6E6787;font-size:14px">Sandbox is live now. Production unlocks after review.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:8px">
+        <div style="background:#1D1633;border-radius:13px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:14px">
+          <div><div style="font:600 10px 'JetBrains Mono',monospace;color:#8B84A3;letter-spacing:1px;margin-bottom:6px">SANDBOX SECRET</div><div style="font:600 13.5px 'JetBrains Mono',monospace;color:#3ADFA5">sk_test_4Jn8Wz1cQm7RtY2vBx5A</div></div>
+          <button style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:#fff;font:600 12px 'Instrument Sans',sans-serif;padding:8px 16px;border-radius:999px;cursor:pointer;flex:none" style-hover="background:rgba(255,255,255,.2)">Copy</button>
+        </div>
+        <div style="background:#FFFBF7;border:1px dashed rgba(29,24,50,.2);border-radius:13px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:14px">
+          <div><div style="font:600 10px 'JetBrains Mono',monospace;color:#A9A2BE;letter-spacing:1px;margin-bottom:6px">PRODUCTION SECRET</div><div style="font:600 13.5px 'JetBrains Mono',monospace;color:#A9A2BE">sk_live_ ································ pending review</div></div>
+          <span style="font:600 10.5px 'JetBrains Mono',monospace;color:#D4842A;background:rgba(212,132,42,.1);padding:5px 12px;border-radius:999px;flex:none">IN REVIEW</span>
+        </div>
+      </div>
+    </sc-if>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:32px;padding-top:24px;border-top:1px solid rgba(29,24,50,.07)">
+      <sc-if value="{{ onbCanBack }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ onbBack }}" style="background:none;border:none;color:#6E6787;font:600 14px 'Instrument Sans',sans-serif;cursor:pointer" style-hover="color:#1D1832">← Back</button>
+      </sc-if>
+      <sc-if value="{{ onbNotDone }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ onbNext }}" style="margin-left:auto;background:#1D1633;border:none;color:#fff;font:700 14.5px 'Instrument Sans',sans-serif;padding:12px 26px;border-radius:999px;cursor:pointer;transition:all .2s" style-hover="transform:translateY(-1px);box-shadow:0 8px 22px rgba(29,22,51,.25)">Continue <span style="color:#FF8FB5">→</span></button>
+      </sc-if>
+      <sc-if value="{{ onb4 }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-left:auto;display:flex;gap:10px">
+          <button onClick="{{ goDocs }}" style="background:#fff;border:1px solid rgba(29,24,50,.14);color:#1D1832;font:700 14px 'Instrument Sans',sans-serif;padding:12px 22px;border-radius:999px;cursor:pointer" style-hover="border-color:#F0568C;color:#D6336C">Read the docs</button>
+          <button onClick="{{ goDash }}" style="background:#1D1633;border:none;color:#fff;font:700 14px 'Instrument Sans',sans-serif;padding:12px 22px;border-radius:999px;cursor:pointer" style-hover="transform:translateY(-1px)">Open dashboard <span style="color:#FF8FB5">→</span></button>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ ABOUT ============ -->
+<sc-if value="{{ isAbout }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="About" style="max-width:1180px;margin:0 auto;padding:72px 32px 96px">
+  <div style="max-width:680px">
+    <div style="font:600 12.5px 'JetBrains Mono',monospace;color:#D6336C;letter-spacing:1.6px;margin-bottom:16px">ABOUT</div>
+    <h1 style="margin:0 0 20px;font:800 50px/1.04 'Bricolage Grotesque',sans-serif;letter-spacing:-2.2px;text-wrap:pretty">The price of a belief should be a public good</h1>
+    <p style="color:#6E6787;font-size:17.5px;line-height:1.65;margin:0 0 12px">Markets are the most reliable forecasting instruments available — but operating one carries significant regulatory, financial, and engineering complexity. Probable exists to make launching a prediction market as straightforward as accepting a card payment.</p>
+    <p style="color:#6E6787;font-size:17.5px;line-height:1.65;margin:0">Our rails settle $2.4B a year for sportsbooks, media platforms, brokerages, and research institutions — on shared liquidity infrastructure and a purpose-built compliance engine.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:56px 0">
+    <sc-for list="{{ aboutStats }}" as="a" hint-placeholder-count="4">
+      <div style="background:linear-gradient(135deg,{{ a.g1 }},{{ a.g2 }});border-radius:18px;padding:26px">
+        <div style="font:600 30px 'JetBrains Mono',monospace;letter-spacing:-2px;margin-bottom:6px">{{ a.value }}</div>
+        <div style="font-size:13.5px;color:#4A4363">{{ a.label }}</div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start">
+    <div>
+      <h2 style="margin:0 0 24px;font:800 32px 'Bricolage Grotesque',sans-serif;letter-spacing:-1.2px">How we work</h2>
+      <div style="display:flex;flex-direction:column;gap:22px">
+        <sc-for list="{{ values }}" as="v" hint-placeholder-count="3">
+          <div style="display:flex;gap:16px">
+            <div style="width:40px;height:40px;border-radius:12px;background:{{ v.bg }};display:flex;align-items:center;justify-content:center;font:700 15px 'JetBrains Mono',monospace;color:{{ v.color }};flex:none">{{ v.n }}</div>
+            <div><div style="font-weight:700;font-size:16.5px;margin-bottom:5px">{{ v.title }}</div><div style="color:#6E6787;font-size:14.5px;line-height:1.6">{{ v.body }}</div></div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <div>
+      <h2 style="margin:0 0 24px;font:800 32px 'Bricolage Grotesque',sans-serif;letter-spacing:-1.2px">Open roles</h2>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <sc-for list="{{ roles }}" as="r" hint-placeholder-count="5">
+          <div style="display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid rgba(29,24,50,.08);border-radius:14px;padding:17px 22px;cursor:pointer;transition:all .2s" style-hover="border-color:rgba(240,86,140,.5);transform:translateX(4px)">
+            <div><div style="font-weight:700;font-size:15.5px">{{ r.title }}</div><div style="font-size:12.5px;color:#A9A2BE;margin-top:3px">{{ r.team }} · {{ r.loc }}</div></div>
+            <span style="color:#D6336C;font-weight:700">→</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- FOOTER -->
+<div style="border-top:1px solid rgba(29,24,50,.08);background:#fff">
+  <div style="max-width:1180px;margin:0 auto;padding:56px 32px 40px;display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:40px">
+    <div>
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px">
+        <svg width="24" height="24" viewBox="0 0 30 30"><rect width="30" height="30" rx="9" fill="#1D1633"></rect><path d="M7 20.5 L12 13 L16 16.5 L23 8" stroke="#FF8FB5" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="23" cy="8" r="2.2" fill="#3ADFA5"></circle></svg>
+        <span style="font:700 17px 'Bricolage Grotesque',sans-serif;letter-spacing:-.4px">Probable</span>
+      </div>
+      <div style="color:#A9A2BE;font-size:13px;line-height:1.6;max-width:240px">Financial infrastructure for prediction markets. San Francisco · New York · London.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="font:600 11px 'JetBrains Mono',monospace;color:#A9A2BE;letter-spacing:1.2px;margin-bottom:4px">PRODUCT</div>
+      <span onClick="{{ goProduct }}" style="font-size:14px;color:#4A4363;cursor:pointer" style-hover="color:#D6336C">Rails</span>
+      <span onClick="{{ goProduct }}" style="font-size:14px;color:#4A4363;cursor:pointer" style-hover="color:#D6336C">Embeds</span>
+      <span onClick="{{ goProduct }}" style="font-size:14px;color:#4A4363;cursor:pointer" style-hover="color:#D6336C">Shield</span>
+      <span onClick="{{ goPricing }}" style="font-size:14px;color:#4A4363;cursor:pointer" style-hover="color:#D6336C">Pricing</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="font:600 11px 'JetBrains Mono',monospace;color:#A9A2BE;letter-spacing:1.2px;margin-bottom:4px">DEVELOPERS</div>
+      <span onClick="{{ goDocs }}" style="font-size:14px;color:#4A4363;cursor:pointer" style-hover="color:#D6336C">Documentation</span>
+      <span onClick="{{ goDocs }}" style="font-size:14px;color:#4A4363;cursor:pointer" style-hover="color:#D6336C">API reference</span>
+      <span onClick="{{ goDash }}" style="font-size:14px;color:#4A4363;cursor:pointer" style-hover="color:#D6336C">Dashboard</span>
+      <span style="font-size:14px;color:#4A4363;cursor:pointer" style-hover="color:#D6336C">Status</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="font:600 11px 'JetBrains Mono',monospace;color:#A9A2BE;letter-spacing:1.2px;margin-bottom:4px">COMPANY</div>
+      <span onClick="{{ goAbout }}" style="font-size:14px;color:#4A4363;cursor:pointer" style-hover="color:#D6336C">About</span>
+      <span onClick="{{ goAbout }}" style="font-size:14px;color:#4A4363;cursor:pointer" style-hover="color:#D6336C">Careers</span>
+      <span style="font-size:14px;color:#4A4363;cursor:pointer" style-hover="color:#D6336C">Blog</span>
+      <span style="font-size:14px;color:#4A4363;cursor:pointer" style-hover="color:#D6336C">Press</span>
+    </div>
+  </div>
+  <div style="max-width:1180px;margin:0 auto;padding:0 32px 32px;display:flex;justify-content:space-between;align-items:center;color:#A9A2BE;font-size:12.5px">
+    <span>© 2026 Probable, Inc. Not investment advice. Markets are regulated event contracts.</span>
+    <span style="font:500 11.5px 'JetBrains Mono',monospace">SOC 2 · CFTC-registered DCM · PCI-DSS L1</span>
+  </div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showTicker&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Header&quot;}, &quot;liveData&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Data&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const mk = (cat, q, yes, vol) => ({ cat, q, yes, vol, delta: 0, hist: Array.from({ length: 24 }, (_, i) => Math.max(3, Math.min(97, yes + (Math.random() - .5) * 10))) });
+    this.state = {
+      page: 'home', volSlider: 46, docsSec: 0, dashTab: 0, onbStep: 0, onbUc: 0, onbVol: 1, onbEnt: 0, faqOpen: -1, mkFilter: 'ALL',
+      markets: [
+        mk('POLITICS', 'Democrats win the 2026 midterms?', 41, '$4.2M'),
+        mk('CRYPTO', 'BTC above $150k by Dec 31?', 63, '$2.8M'),
+        mk('AI', 'GPT-6 released before 2027?', 72, '$1.9M'),
+        mk('SPORTS', 'India wins the T20 World Cup?', 34, '$3.1M'),
+        mk('ECON', 'Fed cuts rates in September?', 58, '$1.4M'),
+        mk('CLIMATE', '2026 hottest year on record?', 66, '$860K'),
+      ],
+      series: Array.from({ length: 30 }, (_, i) => 40 + i * 1.6 + Math.sin(i * .7) * 12 + Math.random() * 8),
+    };
+  }
+  componentDidMount() { this.iv = setInterval(() => this.tick(), 2200); }
+  componentWillUnmount() { clearInterval(this.iv); }
+  tick() {
+    if ((this.props.liveData ?? true) === false) return;
+    this.setState(s => ({
+      markets: s.markets.map(m => {
+        const d = (Math.random() - .5) * 2.6;
+        const yes = Math.max(3, Math.min(97, m.yes + d));
+        return { ...m, yes, delta: d, hist: [...m.hist.slice(1), yes] };
+      })
+    }));
+  }
+  spark(hist) {
+    const min = Math.min(...hist), max = Math.max(...hist), r = (max - min) || 1;
+    return hist.map((v, i) => `${i ? 'L' : 'M'}${(i / (hist.length - 1) * 100).toFixed(1)} ${(28 - (v - min) / r * 24).toFixed(1)}`).join(' ');
+  }
+  fmt$(n) { return n >= 1e6 ? '$' + (n / 1e6).toFixed(n < 1e7 ? 1 : 0) + 'M' : n >= 1e3 ? '$' + Math.round(n / 1e3) + 'K' : '$' + Math.round(n); }
+  renderVals() {
+    const s = this.state;
+    const go = p => () => { this.setState({ page: p }); window.scrollTo(0, 0); };
+    const catColors = { POLITICS: '#7A4599', CRYPTO: '#D4842A', AI: '#D6336C', SPORTS: '#0E9160', ECON: '#3557C7', CLIMATE: '#0E9160' };
+    const markets = s.markets.map(m => {
+      const up = m.delta >= 0;
+      return {
+        ...m,
+        yesStr: Math.round(m.yes), noStr: 100 - Math.round(m.yes),
+        deltaStr: (up ? '▲' : '▼') + Math.abs(m.delta).toFixed(1),
+        deltaColor: up ? '#3ADFA5' : '#FF8FB5',
+        spark: this.spark(m.hist),
+        sparkColor: m.hist[23] >= m.hist[0] ? '#17B877' : '#F4633A',
+        catColor: catColors[m.cat] || '#6E6787',
+      };
+    });
+    const navPages = [['Product', 'product'], ['Pricing', 'pricing'], ['Docs', 'docs'], ['Dashboard', 'dash'], ['About', 'about']];
+    // pricing calc
+    const vol = Math.pow(10, 4 + s.volSlider / 100 * 4); // $10k..$100M
+    const rate = vol < 1e5 ? .019 : vol < 1e6 ? .014 : vol < 1e7 ? .009 : .005;
+    // docs
+    const docSections = [
+      { label: 'Quickstart', method: 'GUIDE', methodBg: '#7A4599', path: 'docs/quickstart', title: 'Quickstart', desc: 'From zero to a live sandbox market in under five minutes. The SDK wraps every endpoint; raw REST works too.', paramsLabel: 'STEPS', params: [
+        { name: '1 · Install', type: 'npm', typeColor: '#D4842A', desc: 'npm install @probable/sdk — Node 18+, Deno, and Bun supported.' },
+        { name: '2 · Authenticate', type: 'env', typeColor: '#7A4599', desc: 'Set PROBABLE_KEY from your dashboard. Test keys are prefixed sk_test_.' },
+        { name: '3 · Create', type: 'api', typeColor: '#0E9160', desc: 'Create your first market against the sandbox — play-money liquidity, full API surface.' },
+        { name: '4 · Go live', type: 'review', typeColor: '#3557C7', desc: 'Submit for activation from the dashboard; most accounts are approved same day.' },
+      ], example: 'import Probable from "@probable/sdk";\nconst probable = new Probable(process.env.PROBABLE_KEY);\n\nconst market = await probable.markets.create({\n  question: "Will it rain in SF tomorrow?",\n  closes: "2026-07-19T08:00:00Z"\n});\nconsole.log(market.quote);  // { yes: 0.31, no: 0.69 }' },
+      { label: 'Authentication', method: 'AUTH', methodBg: '#D4842A', path: 'Authorization: Bearer', title: 'Authentication', desc: 'Every request is authenticated with a secret key over TLS. Keys are scoped per environment and can be restricted by IP range and permission set.', params: [
+        { name: 'sk_live_…', type: 'secret', typeColor: '#D4491F', desc: 'Production secret. Server-side only — never ship it to a client.' },
+        { name: 'sk_test_…', type: 'secret', typeColor: '#D4842A', desc: 'Sandbox secret. Same API surface, play-money liquidity.' },
+        { name: 'pk_…', type: 'publishable', typeColor: '#0E9160', desc: 'Client-side key for Embeds. Grants quote reads and order intents only.' },
+        { name: 'Rotation', type: 'policy', typeColor: '#3557C7', desc: 'Keys rotate without downtime: two keys stay valid for a 24h overlap window.' },
+      ], example: 'curl https://api.probable.com/v1/markets \\\n  -H "Authorization: Bearer sk_test_4Jn8…"\n\n// 401 unauthenticated · 403 key lacks scope' },
+      { label: 'Create a market', method: 'POST', methodBg: '#0E9160', path: '/v1/markets', title: 'Create a market', desc: 'Creates a binary or categorical event market. Returns immediately with streaming quote endpoints; liquidity is seeded from your balance or the shared liquidity pool.', params: [
+        { name: 'question', type: 'string', typeColor: '#D4842A', desc: 'The resolvable question, max 140 chars.' },
+        { name: 'closes', type: 'timestamp', typeColor: '#3557C7', desc: 'ISO-8601 close time. Trading halts here.' },
+        { name: 'oracle', type: 'enum', typeColor: '#7A4599', desc: 'oracle:consensus, probable:panel, or custom webhook.' },
+        { name: 'liquidity.seed', type: 'integer', typeColor: '#0E9160', desc: 'USDC (in cents) to seed the AMM. Min 10,000.' },
+      ], example: 'curl https://api.probable.com/v1/markets \\\n  -u sk_live_9K2mPx: \\\n  -d question="Will BTC close above $150k in 2026?" \\\n  -d closes="2026-12-31T23:59:59Z" \\\n  -d oracle="oracle:consensus" \\\n  -d liquidity[seed]=50000\n\n{\n  "id": "mkt_8fQ2nA",\n  "status": "live",\n  "quote": { "yes": 0.63, "no": 0.37 },\n  "stream": "wss://quotes.probable.com/mkt_8fQ2nA"\n}' },
+      { label: 'Stream quotes', method: 'WS', methodBg: '#3557C7', path: 'wss://quotes.probable.com', title: 'Stream live quotes', desc: 'Subscribe to a websocket of price updates, trades, and depth changes. Median fan-out latency is 14ms globally.', params: [
+        { name: 'markets[]', type: 'string[]', typeColor: '#D4842A', desc: 'Market IDs to subscribe to. Up to 500 per socket.' },
+        { name: 'depth', type: 'boolean', typeColor: '#7A4599', desc: 'Include order-book depth deltas.' },
+        { name: 'throttle_ms', type: 'integer', typeColor: '#0E9160', desc: 'Coalesce updates. 0 = every tick.' },
+      ], example: 'const ws = probable.quotes.stream(["mkt_8fQ2nA"]);\nws.on("quote", q => {\n  render(q.yes);  // 0.63 → 0.64 → ...\n});' },
+      { name: 'orders', label: 'Place an order', method: 'POST', methodBg: '#0E9160', path: '/v1/orders', title: 'Place an order', desc: 'Buy or sell outcome shares at market or limit. Funds are escrowed instantly; fills stream back over the socket.', params: [
+        { name: 'market', type: 'string', typeColor: '#D4842A', desc: 'Market ID.' },
+        { name: 'side', type: 'enum', typeColor: '#7A4599', desc: 'yes or no.' },
+        { name: 'amount', type: 'integer', typeColor: '#0E9160', desc: 'USDC cents to spend.' },
+        { name: 'limit_price', type: 'float', typeColor: '#3557C7', desc: 'Optional. Max price per share, 0.01–0.99.' },
+      ], example: 'const order = await probable.orders.create({\n  market: "mkt_8fQ2nA",\n  side: "yes",\n  amount: 25_00,      // $25.00\n  limit_price: 0.65\n});\n// → { filled: "100%", shares: 39.6 }' },
+      { label: 'Settle & payout', method: 'POST', methodBg: '#0E9160', path: '/v1/settlements', title: 'Settle & pay out', desc: 'Once the oracle resolves, one call sweeps every position: winners are paid to their wallet or bank rail, losers\u2019 escrow is released. Idempotent and atomic.', params: [
+        { name: 'market', type: 'string', typeColor: '#D4842A', desc: 'Market ID to settle.' },
+        { name: 'outcome', type: 'enum', typeColor: '#7A4599', desc: 'Omit to use oracle result; override requires 2-of-3 admin keys.' },
+        { name: 'payout_rail', type: 'enum', typeColor: '#3557C7', desc: 'usdc, ach, or wallet_balance.' },
+      ], example: 'await probable.settlements.create({\n  market: "mkt_8fQ2nA",\n  payout_rail: "usdc"\n});\n// → 12,403 positions settled in 1.8s' },
+      { label: 'Embed widget', method: 'JS', methodBg: '#D6336C', path: '@probable/embed', title: 'Embed a market', desc: 'Drop a fully-functional market into any page. Handles quotes, order flow, KYC hand-off, and responsive layout. Themeable to your brand.', params: [
+        { name: 'market', type: 'string', typeColor: '#D4842A', desc: 'Market ID to render.' },
+        { name: 'theme', type: 'object', typeColor: '#7A4599', desc: 'Colors, radius, font. Or "auto" to inherit your CSS.' },
+        { name: 'onTrade', type: 'callback', typeColor: '#3557C7', desc: 'Fires after each confirmed fill.' },
+      ], example: 'import { mount } from "@probable/embed";\n\nmount("#odds", {\n  market: "mkt_8fQ2nA",\n  theme: "auto",\n  onTrade: t => analytics.track("trade", t)\n});' },
+      { label: 'KYC & compliance', method: 'POST', methodBg: '#0E9160', path: '/v1/shield/checks', title: 'Shield: KYC & compliance', desc: 'Per-jurisdiction eligibility, identity verification, and position limits. One call returns what a user may trade, and why.', params: [
+        { name: 'user', type: 'string', typeColor: '#D4842A', desc: 'Your user ID; we handle document flow.' },
+        { name: 'jurisdiction', type: 'string', typeColor: '#7A4599', desc: 'ISO country/region, or "auto" from IP + docs.' },
+        { name: 'tier', type: 'enum', typeColor: '#0E9160', desc: 'basic (limits apply) or full.' },
+      ], example: 'const check = await probable.shield.checks.create({\n  user: "usr_44Ab",\n  jurisdiction: "auto"\n});\n// → { eligible: true, max_position: 850_00,\n//     excluded_categories: ["elections"] }' },
+      { label: 'Errors', method: 'ERR', methodBg: '#D4491F', path: '4xx / 5xx', title: 'Errors', desc: 'Errors return a machine-readable code, a human message, and a doc link. All endpoints are idempotent with an Idempotency-Key header.', paramsLabel: 'COMMON CODES', params: [
+        { name: 'market_closed', type: '409', typeColor: '#D4491F', desc: 'Order placed after the close timestamp. Refund is automatic.' },
+        { name: 'insufficient_liquidity', type: '422', typeColor: '#D4842A', desc: 'Fill would exceed pool depth. Retry with a limit price.' },
+        { name: 'shield_blocked', type: '403', typeColor: '#7A4599', desc: 'User ineligible for this market in their jurisdiction. Body includes the reason.' },
+        { name: 'rate_limited', type: '429', typeColor: '#3557C7', desc: '1,000 req/min per key. Retry-After header included.' },
+      ], example: '{\n  "error": {\n    "code": "shield_blocked",\n    "message": "User usr_44Ab may not trade election\\n      markets in jurisdiction FR.",\n    "doc": "https://probable.com/docs/errors#shield"\n  }\n}' },
+    ];
+    const d0 = docSections[s.docsSec];
+    const d = { ...d0, paramsLabel: d0.paramsLabel || 'PARAMETERS' };
+    // dashboard
+    const wobble = Math.sin(Date.now() / 3000);
+    return {
+      showTicker: this.props.showTicker ?? true,
+      tickerLoop: [...markets, ...markets],
+      isHome: s.page === 'home', isProduct: s.page === 'product', isPricing: s.page === 'pricing', isDocs: s.page === 'docs', isDash: s.page === 'dash', isAbout: s.page === 'about', isOnboard: s.page === 'onboard',
+      goHome: go('home'), goProduct: go('product'), goPricing: go('pricing'), goDocs: go('docs'), goDash: go('dash'), goAbout: go('about'), goOnboard: go('onboard'),
+      trustBar: [
+        { value: '99.99%', label: 'Uptime SLA', sub: 'Multi-region, active-active' },
+        { value: 'SOC 2', label: 'Type II audited', sub: 'Report available under NDA' },
+        { value: '38', label: 'Jurisdictions covered', sub: 'Shield policy engine v14' },
+        { value: '14ms', label: 'Median quote latency', sub: 'Global websocket fan-out' },
+      ],
+      navItems: navPages.map(([label, p]) => ({ label, go: go(p), bg: s.page === p ? 'rgba(240,86,140,.12)' : 'transparent', color: s.page === p ? '#D6336C' : '#4A4363' })),
+      heroMarkets: markets.slice(0, 3),
+      logos: ['NewsWire', 'BetShift', 'Foresight Lab', 'Kalshi+', 'DraftIQ', 'Signal'],
+      features: [
+        { glyph: '⇄', iconBg: 'rgba(240,86,140,.12)', iconColor: '#D6336C', title: 'Rails', body: 'Escrow, matching, and instant settlement on shared liquidity infrastructure. Payouts land in seconds, on-chain or via ACH.', link: 'Explore Rails' },
+        { glyph: '</>', iconBg: 'rgba(23,184,119,.12)', iconColor: '#0E9160', title: 'Embeds', body: 'A themeable market widget for any surface — web, iOS, Android, even email. Your brand, our order flow.', link: 'Explore Embeds' },
+        { glyph: '✓', iconBg: 'rgba(122,69,153,.12)', iconColor: '#7A4599', title: 'Shield', body: 'KYC, geo-eligibility, and position limits resolved per user, per market, per jurisdiction — in one API call.', link: 'Explore Shield' },
+      ],
+      productBlocks: [
+        { tag: 'RAILS', tagColor: '#D6336C', tagBg: 'rgba(240,86,140,.1)', title: 'Settlement that just happens', body: 'Every trade is escrowed at fill time. When the oracle resolves, one call sweeps thousands of positions atomically — winners paid, escrow released, ledger balanced.', points: ['USDC, ACH, and wallet-balance payout rails', 'Independent oracle resolution or your own panel', 'Atomic settlement: 12k positions in under 2s'], snippet: 'await probable.settlements.create({\n  market: "mkt_8fQ2nA",\n  payout_rail: "usdc"\n});\n// 12,403 positions settled · 1.8s' },
+        { tag: 'EMBEDS', tagColor: '#0E9160', tagBg: 'rgba(23,184,119,.1)', title: 'A market in one line', body: 'The widget handles quotes, order flow, KYC hand-off, and responsive layout. Theme it to your product; conversion-optimized defaults out of the box.', points: ['Web, iOS, Android, and AMP-safe email', 'Inherits your CSS with theme:"auto"', 'A/B-tested order flow, 2.1% median take-rate lift'], snippet: 'import { mount } from "@probable/embed";\n\nmount("#odds", {\n  market: "mkt_8fQ2nA",\n  theme: "auto"\n});' },
+        { tag: 'SHIELD', tagColor: '#7A4599', tagBg: 'rgba(122,69,153,.1)', title: 'Compliance as a primitive', body: 'Prediction markets are regulated event contracts. Shield resolves what each user may trade — by jurisdiction, category, and tier — before the order ever reaches the book.', points: ['CFTC-registered DCM coverage in the US', 'Per-jurisdiction category exclusions', 'Document KYC with 94% auto-approval'], snippet: 'const check = await probable.shield.checks.create({\n  user: "usr_44Ab",\n  jurisdiction: "auto"\n});\n// eligible: true · max_position: $850' },
+      ],
+      useCases: [
+        { k: 'MEDIA', kColor: '#D6336C', title: 'News & publishing', body: 'Live odds beside every headline. Readers trade the story; you keep the engagement and a revenue share.' },
+        { k: 'SPORTSBOOKS', kColor: '#0E9160', title: 'Betting platforms', body: 'Add event markets beyond sports — elections, awards, weather — without building an exchange.' },
+        { k: 'FINTECH', kColor: '#3557C7', title: 'Brokerages & apps', body: 'Offer regulated event contracts alongside stocks and crypto with one integration.' },
+        { k: 'RESEARCH', kColor: '#7A4599', title: 'Forecasting labs', body: 'Spin up internal markets for research. Play-money mode with real market microstructure.' },
+        { k: 'CREATORS', kColor: '#D4842A', title: 'Communities & DAOs', body: 'Let any community put a price on its own predictions — governance included.' },
+        { k: 'ENTERPRISE', kColor: '#0E9160', title: 'Corporate foresight', body: 'Private markets on launch dates, sales targets, and risks. The org chart can\u2019t hide from the price.' },
+      ],
+      tiers: [
+        { name: 'Sandbox', desc: 'Play-money liquidity, full API surface. For building.', rate: '$0', unit: 'forever', popular: false, bg: '#fff', border: 'rgba(29,24,50,.1)', ink: '#1D1832', muted: '#6E6787', featColor: '#4A4363', btnBg: '#fff', btnBorder: 'rgba(29,24,50,.18)', btnColor: '#1D1832', cta: 'Start free', feats: ['Unlimited API calls', 'Play-money AMM', 'All widgets & SDKs', 'Community support'] },
+        { name: 'Scale', desc: 'Production rails with volume pricing that steps down automatically.', rate: '1.9%', unit: 'per settled $, declining', popular: true, bg: '#fff', border: '#F0568C', ink: '#1D1832', muted: '#6E6787', featColor: '#4A4363', btnBg: '#1D1633', btnBorder: '#1D1633', btnColor: '#fff', cta: 'Get API keys', feats: ['Production liquidity pools', 'Shield KYC included', 'USDC + ACH payouts', 'Same-day activation', '99.99% uptime SLA'] },
+        { name: 'Platform', desc: 'For exchanges and books settling $10M+/mo.', rate: '0.5%', unit: 'per settled $, custom', popular: false, bg: '#1D1633', border: '#1D1633', ink: '#fff', muted: '#B9AEDB', featColor: '#C9C2E0', btnBg: '#F0568C', btnBorder: '#F0568C', btnColor: '#fff', cta: 'Talk to sales', feats: ['Dedicated liquidity pools', 'Custom oracle panels', 'White-glove compliance', 'Volume-committed pricing'] },
+      ],
+      volSlider: s.volSlider,
+      onVol: e => this.setState({ volSlider: +e.target.value }),
+      volFill: s.volSlider + '%',
+      volStr: this.fmt$(vol),
+      rateStr: (rate * 100).toFixed(1) + '%',
+      feeStr: this.fmt$(vol * rate),
+      docNavGroups: [{ label: 'GUIDES', from: 0, to: 2 }, { label: 'API REFERENCE', from: 2, to: docSections.length }].map(g => ({ label: g.label, items: docSections.slice(g.from, g.to).map((sec, j) => { const i = g.from + j; return { label: sec.label, go: () => this.setState({ docsSec: i }), bg: s.docsSec === i ? 'rgba(240,86,140,.12)' : 'transparent', color: s.docsSec === i ? '#D6336C' : '#4A4363' }; }) })),
+      docSection: d,
+      dashTabs: ['Overview', 'Markets', 'Payouts', 'Compliance', 'Developers'].map((label, i) => ({ label, go: () => this.setState({ dashTab: i }), line: s.dashTab === i ? '#F0568C' : 'transparent', color: s.dashTab === i ? '#1D1832' : '#A9A2BE' })),
+      dashStats: [
+        { label: 'SETTLED (30D)', value: this.fmt$(4820000 + wobble * 90000), delta: '+18.2%', deltaColor: '#0E9160' },
+        { label: 'OPEN INTEREST', value: this.fmt$(1240000 + wobble * 40000), delta: '+4.1%', deltaColor: '#0E9160' },
+        { label: 'ACTIVE TRADERS', value: (28400 + Math.round(wobble * 300)).toLocaleString(), delta: '+11.7%', deltaColor: '#0E9160' },
+        { label: 'TAKE RATE', value: '1.4%', delta: '-0.1pt', deltaColor: '#D4491F' },
+      ],
+      areaPath: this.chartPath(s.series, true),
+      linePath: this.chartPath(s.series, false),
+      payouts: [
+        { initials: 'JM', who: 'j.mercado@…', when: '2 min ago', amt: '+$1,204.50', avatarBg: 'rgba(240,86,140,.12)', avatarColor: '#D6336C' },
+        { initials: 'AK', who: 'a.kowalski@…', when: '9 min ago', amt: '+$88.20', avatarBg: 'rgba(23,184,119,.12)', avatarColor: '#0E9160' },
+        { initials: 'TS', who: 't.suzuki@…', when: '14 min ago', amt: '+$3,410.00', avatarBg: 'rgba(122,69,153,.12)', avatarColor: '#7A4599' },
+        { initials: 'RB', who: 'r.bakshi@…', when: '31 min ago', amt: '+$412.75', avatarBg: 'rgba(53,87,199,.12)', avatarColor: '#3557C7' },
+        { initials: 'LN', who: 'l.nguyen@…', when: '48 min ago', amt: '+$96.00', avatarBg: 'rgba(212,132,42,.12)', avatarColor: '#D4842A' },
+      ],
+      dashMarkets: markets.map((m, i) => ({ ...m, status: i === 4 ? 'CLOSING' : 'LIVE', stColor: i === 4 ? '#D4842A' : '#0E9160', stBg: i === 4 ? 'rgba(212,132,42,.1)' : 'rgba(23,184,119,.1)' })),
+      isDashOv: s.dashTab === 0, isDashMk: s.dashTab === 1, isDashPo: s.dashTab === 2, isDashCo: s.dashTab === 3, isDashDev: s.dashTab === 4,
+      mkFilters: ['ALL', 'POLITICS', 'CRYPTO', 'SPORTS', 'AI', 'ECON'].map(f => ({ label: f, go: () => this.setState({ mkFilter: f }), bg: s.mkFilter === f ? 'rgba(240,86,140,.12)' : '#fff', border: s.mkFilter === f ? '#F0568C' : 'rgba(29,24,50,.12)', color: s.mkFilter === f ? '#D6336C' : '#6E6787' })),
+      dashMarketsFull: markets.map((m, i) => ({ ...m, status: i === 4 ? 'CLOSING' : 'LIVE', stColor: i === 4 ? '#D4842A' : '#0E9160', stBg: i === 4 ? 'rgba(212,132,42,.1)' : 'rgba(23,184,119,.1)', liq: ['$820K', '$1.4M', '$610K', '$960K', '$430K', '$220K'][i], closes: ['Nov 3', 'Dec 31', 'Dec 31', 'Mar 14', 'Sep 17', 'Jan 15'][i] })).filter(m => s.mkFilter === 'ALL' || m.cat === s.mkFilter),
+      balances: [
+        { label: 'AVAILABLE', value: '$342,610.22', color: '#1D1832', sub: 'Next sweep in 4h 12m' },
+        { label: 'PENDING SETTLEMENT', value: '$88,450.00', color: '#D4842A', sub: 'Across 3 resolving markets' },
+        { label: 'LIQUIDITY RESERVE', value: '$150,000.00', color: '#7A4599', sub: 'Seeding 6 active pools' },
+      ],
+      payoutRows: [
+        { who: 'j.mercado@…', market: 'Fed cuts rates in September?', rail: 'USDC', amt: '+$1,204.50', status: 'SETTLED', stColor: '#0E9160', stBg: 'rgba(23,184,119,.1)', when: '2 min ago' },
+        { who: 'a.kowalski@…', market: 'BTC above $150k by Dec 31?', rail: 'ACH', amt: '+$88.20', status: 'SETTLED', stColor: '#0E9160', stBg: 'rgba(23,184,119,.1)', when: '9 min ago' },
+        { who: 't.suzuki@…', market: 'GPT-6 released before 2027?', rail: 'USDC', amt: '+$3,410.00', status: 'PENDING', stColor: '#D4842A', stBg: 'rgba(212,132,42,.1)', when: '14 min ago' },
+        { who: 'r.bakshi@…', market: 'India wins the T20 World Cup?', rail: 'WALLET', amt: '+$412.75', status: 'SETTLED', stColor: '#0E9160', stBg: 'rgba(23,184,119,.1)', when: '31 min ago' },
+        { who: 'l.nguyen@…', market: 'Democrats win the 2026 midterms?', rail: 'ACH', amt: '+$96.00', status: 'SETTLED', stColor: '#0E9160', stBg: 'rgba(23,184,119,.1)', when: '48 min ago' },
+        { who: 'm.okafor@…', market: '2026 hottest year on record?', rail: 'USDC', amt: '+$1,880.10', status: 'SETTLED', stColor: '#0E9160', stBg: 'rgba(23,184,119,.1)', when: '1 hr ago' },
+      ],
+      kycStats: [
+        { label: 'AUTO-APPROVAL RATE', value: '94.2%', color: '#0E9160' },
+        { label: 'PENDING REVIEWS', value: '37', color: '#D4842A' },
+        { label: 'BLOCKED TODAY', value: '12', color: '#D4491F' },
+      ],
+      kycQueue: [
+        { user: 'usr_88Kd', juris: 'United States · NY', tier: 'FULL', flag: 'Document mismatch', status: 'REVIEW', stColor: '#D4842A', stBg: 'rgba(212,132,42,.1)', when: '12 min ago' },
+        { user: 'usr_23Fa', juris: 'United Kingdom', tier: 'BASIC', flag: 'Velocity threshold', status: 'REVIEW', stColor: '#D4842A', stBg: 'rgba(212,132,42,.1)', when: '26 min ago' },
+        { user: 'usr_71Qn', juris: 'France', tier: 'FULL', flag: 'Category exclusion', status: 'BLOCKED', stColor: '#D4491F', stBg: 'rgba(229,72,77,.1)', when: '58 min ago' },
+        { user: 'usr_09Zw', juris: 'Singapore', tier: 'BASIC', flag: '—', status: 'APPROVED', stColor: '#0E9160', stBg: 'rgba(23,184,119,.1)', when: '1 hr ago' },
+        { user: 'usr_45Lm', juris: 'Canada · ON', tier: 'FULL', flag: 'Sanctions rescreen', status: 'REVIEW', stColor: '#D4842A', stBg: 'rgba(212,132,42,.1)', when: '2 hr ago' },
+      ],
+      jurisChips: ['US · 41 states', 'UK', 'EU · 24 markets', 'Canada', 'Singapore', 'Australia', 'Japan', 'Brazil', 'Mexico', 'UAE', 'India — pending', 'S. Korea — pending'].map(j => { const p = j.includes('pending'); return { label: j, color: p ? '#D4842A' : '#0E9160', bg: p ? 'rgba(212,132,42,.08)' : 'rgba(23,184,119,.08)', dot: p ? '#D4842A' : '#17B877' }; }),
+      apiKeys: [
+        { name: 'Production', env: 'LIVE', envColor: '#0E9160', envBg: 'rgba(23,184,119,.1)', key: 'sk_live_9K2m••••••••••••Px4Q', created: 'Mar 2, 2026', last: '2 min ago' },
+        { name: 'Sandbox', env: 'TEST', envColor: '#D4842A', envBg: 'rgba(212,132,42,.1)', key: 'sk_test_4Jn8••••••••••••Wz1c', created: 'Feb 14, 2026', last: '3 days ago' },
+        { name: 'Embeds (client)', env: 'PUBLISHABLE', envColor: '#3557C7', envBg: 'rgba(53,87,199,.1)', key: 'pk_live_7Ha2••••••••••••Rt9M', created: 'Mar 2, 2026', last: '14 sec ago' },
+      ],
+      webhooks: [
+        { url: 'https://api.acme.com/webhooks/probable', events: 'settlement.completed · order.filled · market.resolved', ok: '99.8%' },
+        { url: 'https://ops.acme.com/hooks/shield', events: 'shield.flagged · shield.blocked', ok: '100%' },
+      ],
+      reqLog: [
+        { method: 'POST', mColor: '#0E9160', path: '/v1/orders', status: '201', stColor: '#0E9160', ms: '38ms', when: '14:02:11' },
+        { method: 'GET', mColor: '#3557C7', path: '/v1/markets/mkt_8fQ2nA', status: '200', stColor: '#0E9160', ms: '12ms', when: '14:02:09' },
+        { method: 'POST', mColor: '#0E9160', path: '/v1/shield/checks', status: '200', stColor: '#0E9160', ms: '104ms', when: '14:01:58' },
+        { method: 'POST', mColor: '#0E9160', path: '/v1/orders', status: '422', stColor: '#D4842A', ms: '29ms', when: '14:01:44' },
+        { method: 'POST', mColor: '#0E9160', path: '/v1/settlements', status: '201', stColor: '#0E9160', ms: '1,840ms', when: '13:58:02' },
+        { method: 'GET', mColor: '#3557C7', path: '/v1/payouts?limit=50', status: '200', stColor: '#0E9160', ms: '22ms', when: '13:57:31' },
+        { method: 'DELETE', mColor: '#D4491F', path: '/v1/webhooks/wh_2Ka9', status: '204', stColor: '#0E9160', ms: '18ms', when: '13:51:12' },
+      ],
+      compRows: [
+        { feat: 'Liquidity', a: 'Play-money', b: 'Shared pools', c: 'Dedicated pools' },
+        { feat: 'Shield KYC & eligibility', a: 'Simulated', b: '✓', c: '✓ + custom policy' },
+        { feat: 'Payout rails', a: 'Simulated', b: 'USDC · ACH · wallet', c: 'All + wire' },
+        { feat: 'Oracle resolution', a: 'Manual', b: 'Independent panel', c: 'Custom panels' },
+        { feat: 'Embeds & SDKs', a: '✓', b: '✓', c: '✓ + white-label' },
+        { feat: 'Uptime SLA', a: '—', b: '99.99%', c: '99.995% custom' },
+        { feat: 'Support', a: 'Community', b: 'Priority, 4h response', c: 'Dedicated team + Slack' },
+        { feat: 'Volume pricing', a: '—', b: 'Automatic tiers', c: 'Committed-use contracts' },
+      ].map(r => { const c = v => v === '✓' ? '#0E9160' : v === '—' ? '#B4ADC8' : '#4A4363'; return { ...r, aC: c(r.a), bC: c(r.b), cC: c(r.c) }; }),
+      faqs: [
+        { q: 'Is this legal? Who holds the regulatory burden?', a: 'Markets on Probable are regulated event contracts executed on licensed venues. We hold the venue relationships, registrations, and reporting obligations; Shield enforces per-jurisdiction eligibility so your users only ever see markets they may lawfully trade.' },
+        { q: 'Where does liquidity come from?', a: 'Scale plans trade against shared liquidity pools aggregated across the network, plus optional seeding from your own balance. Platform plans can run dedicated pools with committed market-maker support.' },
+        { q: 'How fast are payouts after resolution?', a: 'Settlement is atomic once the oracle resolves — typically under two seconds for the full position sweep. USDC payouts land immediately; ACH follows standard banking windows.' },
+        { q: 'Can we use our own oracle?', a: 'Yes. Platform plans support custom resolution panels and webhook oracles with a challenge window. Defaults use an independent resolution panel.' },
+        { q: 'What does migration from an in-house exchange look like?', a: 'Most teams run Probable in shadow mode against their existing book, then cut over market-by-market. Our solutions team handles position migration; typical cutover is 4–6 weeks.' },
+      ].map((f, i) => ({ ...f, open: s.faqOpen === i, chev: s.faqOpen === i ? '−' : '+', toggle: () => this.setState({ faqOpen: s.faqOpen === i ? -1 : i }) })),
+      onbSteps: ['Company', 'Use case', 'Compliance', 'API keys'].map((label, i) => { const done = i < s.onbStep, act = i === s.onbStep; return { n: done ? '✓' : String(i + 1), label, hasLine: i < 3, circleBg: done ? '#17B877' : act ? '#1D1633' : '#fff', circleColor: done || act ? '#fff' : '#A9A2BE', circleBorder: done ? '#17B877' : act ? '#1D1633' : 'rgba(29,24,50,.15)', labelColor: act ? '#1D1832' : '#A9A2BE', lineBg: done ? '#17B877' : 'rgba(29,24,50,.12)' }; }),
+      onb1: s.onbStep === 0, onb2: s.onbStep === 1, onb3: s.onbStep === 2, onb4: s.onbStep === 3,
+      onbCanBack: s.onbStep > 0, onbNotDone: s.onbStep < 3,
+      onbNext: () => { this.setState({ onbStep: Math.min(3, s.onbStep + 1) }); window.scrollTo(0, 0); },
+      onbBack: () => { this.setState({ onbStep: Math.max(0, s.onbStep - 1) }); window.scrollTo(0, 0); },
+      entChips: ['C-Corp', 'LLC', 'Ltd / GmbH', 'Nonprofit'].map((label, i) => ({ label, go: () => this.setState({ onbEnt: i }), bg: s.onbEnt === i ? 'rgba(240,86,140,.1)' : '#FFFBF7', border: s.onbEnt === i ? '#F0568C' : 'rgba(29,24,50,.12)', color: s.onbEnt === i ? '#D6336C' : '#4A4363' })),
+      ucCards: [
+        { title: 'Embed markets', body: 'Add live markets to an existing product with the widget.' },
+        { title: 'Settlement rails', body: 'Run your own book on our escrow, oracle, and payout stack.' },
+        { title: 'Full exchange', body: 'Launch a complete market venue on dedicated infrastructure.' },
+      ].map((c, i) => ({ ...c, go: () => this.setState({ onbUc: i }), bg: s.onbUc === i ? 'rgba(240,86,140,.06)' : '#FFFBF7', border: s.onbUc === i ? '#F0568C' : 'rgba(29,24,50,.1)' })),
+      volChips: ['< $100K', '$100K – $1M', '$1M – $10M', '$10M +'].map((label, i) => ({ label, go: () => this.setState({ onbVol: i }), bg: s.onbVol === i ? 'rgba(240,86,140,.1)' : '#FFFBF7', border: s.onbVol === i ? '#F0568C' : 'rgba(29,24,50,.12)', color: s.onbVol === i ? '#D6336C' : '#4A4363' })),
+      shieldChecks: [
+        { title: 'Business verification', sub: 'Registry lookup + EIN match', status: 'QUEUED', stColor: '#D4842A', stBg: 'rgba(212,132,42,.1)' },
+        { title: 'Beneficial ownership', sub: 'UBO declaration, 25% threshold', status: 'QUEUED', stColor: '#D4842A', stBg: 'rgba(212,132,42,.1)' },
+        { title: 'Sanctions screening', sub: 'OFAC, EU, UN consolidated lists', status: 'PASSED', stColor: '#0E9160', stBg: 'rgba(23,184,119,.1)' },
+        { title: 'Bank account', sub: 'For fee debits and reserve top-ups', status: 'OPTIONAL', stColor: '#A9A2BE', stBg: 'rgba(29,24,50,.06)' },
+      ],
+      aboutStats: [
+        { value: '$2.4B', label: 'settled annually', g1: '#FFE3EC', g2: '#FFEFDD' },
+        { value: '212', label: 'people across 3 offices', g1: '#E8FBF1', g2: '#EFE9FF' },
+        { value: '4,900+', label: 'platforms building on us', g1: '#EFE9FF', g2: '#FFE3EC' },
+        { value: '38', label: 'jurisdictions covered', g1: '#FFEFDD', g2: '#E8FBF1' },
+      ],
+      values: [
+        { n: '01', bg: 'rgba(240,86,140,.12)', color: '#D6336C', title: 'The price is the product', body: 'Every feature exists to make market prices more accurate, more liquid, and more available.' },
+        { n: '02', bg: 'rgba(23,184,119,.12)', color: '#0E9160', title: 'Compliance is a feature', body: 'We treat regulation as a design constraint, not an obstacle. Shield exists so our customers sleep.' },
+        { n: '03', bg: 'rgba(122,69,153,.12)', color: '#7A4599', title: 'Reliability is the brand', body: 'Settlement infrastructure earns trust in years and loses it in seconds. We engineer for the worst day, not the demo.' },
+      ],
+      roles: [
+        { title: 'Staff Engineer, Settlement', team: 'Rails', loc: 'SF / Remote' },
+        { title: 'Product Designer, Embeds', team: 'Design', loc: 'NYC' },
+        { title: 'Regulatory Counsel', team: 'Shield', loc: 'London' },
+        { title: 'Quant, Market Microstructure', team: 'Liquidity', loc: 'NYC' },
+        { title: 'Developer Advocate', team: 'DevRel', loc: 'Remote' },
+      ],
+    };
+  }
+  chartPath(series, area) {
+    const min = Math.min(...series), max = Math.max(...series), r = (max - min) || 1;
+    const pts = series.map((v, i) => [i / (series.length - 1) * 600, 170 - (v - min) / r * 150]);
+    let p = pts.map((pt, i) => `${i ? 'L' : 'M'}${pt[0].toFixed(1)} ${pt[1].toFixed(1)}`).join(' ');
+    if (area) p += ` L600 180 L0 180 Z`;
+    return p;
+  }
+}
+</script>
+</body>
+</html>
