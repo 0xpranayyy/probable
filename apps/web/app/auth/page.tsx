@@ -4,14 +4,11 @@ import React, { useState, useEffect } from "react";
 import Navbar from "../../components/Navbar";
 import Ticker from "../../components/Ticker";
 import Footer from "../../components/Footer";
-import { sdk } from "../../lib/sdk";
 import { usePrivy } from "@privy-io/react-auth";
 
 export default function AuthPage() {
-  const { login, ready, authenticated, getAccessToken } = usePrivy();
+  const { login, ready, authenticated } = usePrivy();
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [isError, setIsError] = useState(false);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -22,32 +19,25 @@ export default function AuthPage() {
   }, []);
 
   useEffect(() => {
-    if (ready && authenticated) {
-      handlePrivyAuth();
+    if (ready && !authenticated) {
+      login();
     }
   }, [ready, authenticated]);
 
-  const handlePrivyAuth = async () => {
-    setLoading(true);
-    setMessage("Verifying credentials with secure auth server...");
-    setIsError(false);
-    try {
-      const privyToken = await getAccessToken();
-      if (!privyToken) throw new Error("Could not retrieve authentication token.");
-
-      const data = await sdk.auth.privy(privyToken);
-      localStorage.setItem("probable_session", JSON.stringify({ token: data.token, user: data.user }));
-      setMessage("Authentication successful! Redirecting to dashboard...");
-      setTimeout(() => {
-        window.location.href = "/dashboard";
-      }, 1200);
-    } catch (err: any) {
-      console.error(err);
-      setIsError(true);
-      setMessage(err.message || "Failed to sync session with backend.");
-      setLoading(false);
+  useEffect(() => {
+    if (ready && authenticated) {
+      setLoading(true);
+      // Wait for navbar sync to write to localStorage, then redirect
+      const interval = setInterval(() => {
+        const cached = localStorage.getItem("probable_session");
+        if (cached) {
+          clearInterval(interval);
+          window.location.href = "/dashboard";
+        }
+      }, 100);
+      return () => clearInterval(interval);
     }
-  };
+  }, [ready, authenticated]);
 
   return (
     <div style={{ minHeight: "100vh", background: "#F8F8FA", color: "#120F24", fontFamily: "'Instrument Sans', sans-serif" }}>
@@ -77,21 +67,6 @@ export default function AuthPage() {
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            {message && (
-              <div style={{
-                fontSize: "13.5px",
-                color: isError ? "#8200FF" : "#17B877",
-                background: isError ? "rgba(255,92,35,0.07)" : "rgba(23,184,119,0.07)",
-                border: `1px solid ${isError ? "rgba(255,92,35,0.15)" : "rgba(23,184,119,0.15)"}`,
-                padding: "12px 16px",
-                borderRadius: "10px",
-                fontWeight: 600,
-                textAlign: "center"
-              }}>
-                {message}
-              </div>
-            )}
-
             <button
               onClick={() => login()}
               disabled={loading || !ready}
@@ -100,7 +75,7 @@ export default function AuthPage() {
                 background: "#120F24",
                 color: "#fff",
                 border: "none",
-                borderRadius: "10px",
+                borderRadius: "9999px",
                 padding: "15px",
                 font: "700 15px 'Instrument Sans'",
                 cursor: "pointer",
@@ -109,7 +84,7 @@ export default function AuthPage() {
                 boxShadow: "0 4px 12px rgba(18, 15, 36, 0.15)"
               }}
             >
-              {loading ? "Please wait..." : "Sign In with Privy"}
+              {loading ? "Authenticating session..." : "Sign In with Privy"}
             </button>
             
             <div style={{ fontSize: "11px", color: "#9490A8", textAlign: "center", marginTop: "8px" }}>

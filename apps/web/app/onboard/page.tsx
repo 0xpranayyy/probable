@@ -6,6 +6,7 @@ import Ticker from "../../components/Ticker";
 import Link from "next/link";
 import Footer from "../../components/Footer";
 import { getAuthedSdk } from "../../lib/sdk";
+import { usePrivy } from "@privy-io/react-auth";
 
 export default function Onboarding() {
   const [step, setStep] = useState(0);
@@ -20,15 +21,34 @@ export default function Onboarding() {
   const [user, setUser] = useState<{ id: string; email: string; name: string } | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
+  const { ready, authenticated } = usePrivy();
+
   useEffect(() => {
+    if (ready && !authenticated) {
+      window.location.href = "/auth";
+      return;
+    }
+
     const cached = localStorage.getItem("probable_session");
     if (cached) {
       const { token, user } = JSON.parse(cached);
       setUser(user);
       setToken(token);
       setCompanyName(user.name || user.email.split("@")[0]);
+    } else if (ready && authenticated) {
+      const interval = setInterval(() => {
+        const cachedSync = localStorage.getItem("probable_session");
+        if (cachedSync) {
+          const { token, user } = JSON.parse(cachedSync);
+          setUser(user);
+          setToken(token);
+          setCompanyName(user.name || user.email.split("@")[0]);
+          clearInterval(interval);
+        }
+      }, 100);
+      return () => clearInterval(interval);
     }
-  }, []);
+  }, [ready, authenticated]);
 
   const steps = ["Company", "Use case", "Compliance", "API keys"];
   const entChips = ["C-Corp", "LLC", "Ltd / GmbH", "Nonprofit"];
@@ -58,6 +78,20 @@ export default function Onboarding() {
     }
     setStep(prev => prev + 1);
   };
+
+  if (!ready || !authenticated || !token) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#F8F8FA", color: "#120F24", fontFamily: "'Instrument Sans',sans-serif" }}>
+        <Ticker />
+        <Navbar />
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "160px 0" }}>
+          <div style={{ font: "600 14px 'JetBrains Mono',monospace", color: "#9490A8" }}>
+            Redirecting to secure gateway...
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: "100vh", background: "#F8F8FA", color: "#120F24", fontFamily: "'Instrument Sans',sans-serif" }}>

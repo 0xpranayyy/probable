@@ -6,6 +6,7 @@ import Ticker from "../../components/Ticker";
 import Footer from "../../components/Footer";
 import { getAuthedSdk } from "../../lib/sdk";
 import { API_BASE_URL } from "../../lib/config";
+import { usePrivy } from "@privy-io/react-auth";
 
 const Kbd = ({ children }: { children: React.ReactNode }) => (
   <kbd style={{
@@ -232,17 +233,36 @@ export default function Dashboard() {
     }
   };
 
+  const { ready, authenticated } = usePrivy();
+
   useEffect(() => {
+    if (ready && !authenticated) {
+      window.location.href = "/auth";
+      return;
+    }
+
     const cached = localStorage.getItem("probable_session");
     if (cached) {
       const { token, user } = JSON.parse(cached);
       setUser(user);
       setToken(token);
       fetchData(token);
+    } else if (ready && authenticated) {
+      const interval = setInterval(() => {
+        const cachedSync = localStorage.getItem("probable_session");
+        if (cachedSync) {
+          const { token, user } = JSON.parse(cachedSync);
+          setUser(user);
+          setToken(token);
+          fetchData(token);
+          clearInterval(interval);
+        }
+      }, 100);
+      return () => clearInterval(interval);
     } else {
       setLoading(false);
     }
-  }, []);
+  }, [ready, authenticated]);
 
   const tabs = ["Overview", "Markets", "Payouts", "Compliance", "Real Trading", "Developers"];
 
@@ -344,16 +364,15 @@ export default function Dashboard() {
     { user: "usr_71Qn", juris: "France", tier: "FULL", flag: "Category exclusion", status: "BLOCKED", stColor: "#D4491F", stBg: "rgba(229,72,77,.1)", when: "58 min ago" }
   ];
 
-  if (!user && !loading) {
+  if (!ready || !authenticated || !user || !token) {
     return (
-      <div style={{ minHeight: "100vh", background: "#FFFBF7", color: "#1D1832", fontFamily: "'Instrument Sans',sans-serif" }}>
+      <div style={{ minHeight: "100vh", background: "#F8F8FA", color: "#120F24", fontFamily: "'Instrument Sans',sans-serif" }}>
         <Ticker />
         <Navbar />
-        <div style={{ maxWidth: "550px", margin: "140px auto 180px", padding: "44px 38px", background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "24px", textAlign: "center", boxShadow: "0 20px 48px rgba(74,42,90,.05)" }}>
-          <div style={{ display: "inline-flex", background: "rgba(130, 0, 255, 0.1)", color: "#8200FF", font: "600 12px 'JetBrains Mono'", padding: "6px 14px", borderRadius: "999px", marginBottom: "22px", letterSpacing: "0.8px" }}>RESTRICTED ACCESS</div>
-          <h2 style={{ font: "800 28px 'Bricolage Grotesque',sans-serif", margin: "0 0 12px", letterSpacing: "-0.8px" }}>Access Restricted</h2>
-          <p style={{ color: "#6E6787", fontSize: "15px", lineHeight: "1.6", margin: "0 0 28px" }}>Please log in to your developer profile using the administrative gateway to access the administrative dashboard, settlement logs, and API metrics.</p>
-          <a href="/auth" style={{ display: "inline-block", background: "#120F24", color: "#fff", textDecoration: "none", font: "700 14px 'Instrument Sans'", padding: "14px 32px", borderRadius: "9999px" }}>Go to gateway</a>
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "160px 0" }}>
+          <div style={{ font: "600 14px 'JetBrains Mono',monospace", color: "#9490A8" }}>
+            Redirecting to secure gateway...
+          </div>
         </div>
       </div>
     );
