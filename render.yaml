@@ -5,12 +5,6 @@ databases:
     region: oregon
 
 services:
-  - type: redis
-    name: probable-redis
-    plan: free
-    region: oregon
-    ipAllowList: []
-
   - type: web
     name: probable-api
     runtime: docker
@@ -25,10 +19,7 @@ services:
           name: probable-db
           property: connectionString
       - key: REDIS_URL
-        fromService:
-          type: redis
-          name: probable-redis
-          property: connectionString
+        value: redis://red-d9aijktaeets73e34h00:6379
       - key: POLYGON_RPC_URL
         value: https://polygon-bor-rpc.publicnode.com
       - key: PRIVY_APP_ID
