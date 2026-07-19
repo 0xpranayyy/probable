@@ -69,7 +69,7 @@ export default function Navbar() {
   const [signInHover, setSignInHover] = useState(false);
   const [getKeysHover, setGetKeysHover] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const { logout } = usePrivy();
+  const { ready, authenticated, logout } = usePrivy();
 
   const [user, setUser] = useState<{ name: string; email: string } | null>(null);
 
@@ -84,8 +84,20 @@ export default function Navbar() {
     const cached = localStorage.getItem("probable_session");
     if (cached) {
       setUser(JSON.parse(cached).user);
+    } else {
+      setUser(null);
     }
-  }, []);
+  }, [pathname]);
+
+  // Redirect to /auth if authenticated with Privy but backend session not synced yet
+  useEffect(() => {
+    if (ready && authenticated) {
+      const cached = localStorage.getItem("probable_session");
+      if (!cached && window.location.pathname !== "/auth") {
+        window.location.href = "/auth";
+      }
+    }
+  }, [ready, authenticated]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);

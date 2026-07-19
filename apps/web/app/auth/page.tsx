@@ -5,10 +5,12 @@ import Navbar from "../../components/Navbar";
 import Ticker from "../../components/Ticker";
 import Footer from "../../components/Footer";
 import { usePrivy } from "@privy-io/react-auth";
+import { sdk } from "../../lib/sdk";
 
 export default function AuthPage() {
-  const { login, ready, authenticated } = usePrivy();
+  const { login, ready, authenticated, getAccessToken } = usePrivy();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -19,25 +21,33 @@ export default function AuthPage() {
   }, []);
 
   useEffect(() => {
-    if (ready && !authenticated) {
+    if (ready && !authenticated && !error) {
       login();
     }
-  }, [ready, authenticated]);
+  }, [ready, authenticated, error]);
 
   useEffect(() => {
     if (ready && authenticated) {
-      setLoading(true);
-      // Wait for navbar sync to write to localStorage, then redirect
-      const interval = setInterval(() => {
-        const cached = localStorage.getItem("probable_session");
-        if (cached) {
-          clearInterval(interval);
-          window.location.href = "/dashboard";
-        }
-      }, 100);
-      return () => clearInterval(interval);
+      handlePrivySync();
     }
   }, [ready, authenticated]);
+
+  const handlePrivySync = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const privyToken = await getAccessToken();
+      if (!privyToken) throw new Error("Could not retrieve Privy access token.");
+
+      const data = await sdk.auth.privy(privyToken);
+      localStorage.setItem("probable_session", JSON.stringify({ token: data.token, user: data.user }));
+      window.location.href = "/dashboard";
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Privy verification failed on backend. Please verify your environment configurations.");
+      setLoading(false);
+    }
+  };
 
   return (
     <div style={{ minHeight: "100vh", background: "#F8F8FA", color: "#120F24", fontFamily: "'Instrument Sans', sans-serif" }}>
@@ -67,6 +77,21 @@ export default function AuthPage() {
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            {error && (
+              <div style={{
+                fontSize: "13.5px",
+                color: "#F7004E",
+                background: "rgba(247,0,78,0.06)",
+                border: "1px solid rgba(247,0,78,0.14)",
+                padding: "12px 16px",
+                borderRadius: "10px",
+                fontWeight: 600,
+                textAlign: "center"
+              }}>
+                {error}
+              </div>
+            )}
+
             <button
               onClick={() => login()}
               disabled={loading || !ready}
