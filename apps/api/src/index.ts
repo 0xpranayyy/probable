@@ -398,9 +398,13 @@ app.post('/v1/auth/privy', async (c) => {
     const claims = await getPrivy().verifyAuthToken(privyToken)
     const privyUser = await getPrivy().getUser(claims.userId) as any
 
-    const email = privyUser.email || privyUser.linkedAccounts?.find((a: any) => a.type === 'email')?.address || privyUser.linkedAccounts?.find((a: any) => a.type === 'email')?.emailAddress
+    const embeddedWallet = privyUser.linkedAccounts?.find((a: any) => a.type === 'wallet' && a.walletClientType === 'privy')
+    const walletAddress = embeddedWallet?.address || null
+
+    let email = privyUser.email || privyUser.linkedAccounts?.find((a: any) => a.type === 'email')?.address || privyUser.linkedAccounts?.find((a: any) => a.type === 'email')?.emailAddress
     if (!email) {
-      return c.json({ error: "No email address associated with this Privy account" }, 400)
+      // Fallback pseudo-email for wallet login
+      email = `${walletAddress || claims.userId}@probable.placeholder`
     }
 
     let user = await prisma.user.findFirst({
@@ -413,9 +417,6 @@ app.post('/v1/auth/privy', async (c) => {
     })
 
     if (!user) {
-      const embeddedWallet = privyUser.linkedAccounts?.find((a: any) => a.type === 'wallet' && a.walletClientType === 'privy')
-      const walletAddress = embeddedWallet?.address || null
-
       user = await prisma.user.create({
         data: {
           email,
