@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { ProbableClient } from "@probable/sdk";
 import { usePrivy } from "@privy-io/react-auth";
+import { API_BASE_URL } from "../lib/config";
 
 const navItems = [
   { label: "Home", href: "/" },
@@ -98,7 +99,7 @@ export default function Navbar() {
     } catch {}
     const cached = localStorage.getItem("probable_session");
     if (cached) {
-      const sdk = new ProbableClient({ token: JSON.parse(cached).token, baseUrl: "http://localhost:3001" });
+      const sdk = new ProbableClient({ token: JSON.parse(cached).token, baseUrl: API_BASE_URL });
       await sdk.auth.logout().catch(() => {});
     }
     localStorage.removeItem("probable_session");

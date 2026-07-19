@@ -6,6 +6,7 @@ import Ticker from "../../components/Ticker";
 import Link from "next/link";
 import Footer from "../../components/Footer";
 import { ProbableClient } from "@probable/sdk";
+import { API_BASE_URL } from "../../lib/config";
 
 const docSections = [
   {
@@ -19,7 +20,7 @@ const docSections = [
     params: [
       { name: "userId", type: "string", typeColor: "#8200FF", desc: "Optional. Developer userID reference." }
     ],
-    example: `// cURL example\ncurl -X POST http://localhost:3001/keys \\\n  -H "Content-Type: application/json" \\\n  -d '{"userId": "dev_acme"}'\n\n// Response\n{\n  "userId": "dev_acme",\n  "key": "sk_test_8f2a1b9c...",\n  "status": "active",\n  "createdAt": "2026-07-18T15:47:11Z"\n}`
+    example: `// cURL example\ncurl -X POST https://probable-api.onrender.com/keys \\\n  -H "Content-Type: application/json" \\\n  -d '{"userId": "dev_acme"}'\n\n// Response\n{\n  "userId": "dev_acme",\n  "key": "sk_test_8f2a1b9c...",\n  "status": "active",\n  "createdAt": "2026-07-18T15:47:11Z"\n}`
   },
   {
     id: "markets",
@@ -28,13 +29,13 @@ const docSections = [
     methodBg: "#0E9160",
     path: "/v1/markets",
     title: "Create Event Market",
-    desc: "Initialize a new prediction market. This triggers AI categorization and registers it in the SQLite database.",
+    desc: "Initialize a new prediction market. This triggers AI categorization and registers it in the Postgres database.",
     params: [
       { name: "question", type: "string", typeColor: "#8200FF", desc: "The query event statement (e.g. 'Will ETH close above $5k?')." },
       { name: "closes", type: "string", typeColor: "#8200FF", desc: "Optional. ISO-8601 target closing date." },
       { name: "oracle", type: "string", typeColor: "#8200FF", desc: "Optional. Custom oracle resolver identifier." }
     ],
-    example: `// cURL example\ncurl -X POST http://localhost:3001/v1/markets \\\n  -H "Authorization: Bearer sk_test_4Jn8Wz1c" \\\n  -d '{"question": "Will BTC reach $100K this year?"}'`
+    example: `// cURL example\ncurl -X POST https://probable-api.onrender.com/v1/markets \\\n  -H "Authorization: Bearer sk_test_4Jn8Wz1c" \\\n  -d '{"question": "Will BTC reach $100K this year?"}'`
   },
   {
     id: "wallets",
@@ -47,7 +48,7 @@ const docSections = [
     params: [
       { name: "userId", type: "string", typeColor: "#8200FF", desc: "Your internal application user ID." }
     ],
-    example: `// cURL example\ncurl -X POST http://localhost:3001/v1/wallets \\\n  -H "Authorization: Bearer sk_test_4Jn8Wz1c" \\\n  -d '{"userId": "user_981a"}'`
+    example: `// cURL example\ncurl -X POST https://probable-api.onrender.com/v1/wallets \\\n  -H "Authorization: Bearer sk_test_4Jn8Wz1c" \\\n  -d '{"userId": "user_981a"}'`
   },
   {
     id: "trades",
@@ -63,7 +64,7 @@ const docSections = [
       { name: "type", type: "string", typeColor: "#8200FF", desc: "Target trade decision, must be 'YES' or 'NO'." },
       { name: "amount", type: "number", typeColor: "#7A4599", desc: "Amount in USD/USDC shares to buy." }
     ],
-    example: `// cURL example\ncurl -X POST http://localhost:3001/v1/trades \\\n  -H "Authorization: Bearer sk_test_4Jn8Wz1c" \\\n  -d '{"marketId": "mkt_btc_150k", "type": "YES", "amount": 10}'`
+    example: `// cURL example\ncurl -X POST https://probable-api.onrender.com/v1/trades \\\n  -H "Authorization: Bearer sk_test_4Jn8Wz1c" \\\n  -d '{"marketId": "mkt_btc_150k", "type": "YES", "amount": 10}'`
   },
   {
     id: "predictions",
@@ -76,7 +77,7 @@ const docSections = [
     params: [
       { name: "question", type: "string", typeColor: "#8200FF", desc: "The market query statement to analyze." }
     ],
-    example: `// cURL example\ncurl -X POST http://localhost:3001/v1/predictions \\\n  -H "Authorization: Bearer sk_test_4Jn8Wz1c" \\\n  -d '{"question": "Will OpenAI IPO in 2025?"}'`
+    example: `// cURL example\ncurl -X POST https://probable-api.onrender.com/v1/predictions \\\n  -H "Authorization: Bearer sk_test_4Jn8Wz1c" \\\n  -d '{"question": "Will OpenAI IPO in 2025?"}'`
   }
 ];
 
@@ -118,7 +119,7 @@ export default function Docs() {
     try {
       const client = new ProbableClient({
         apiKey: sandboxApiKey,
-        baseUrl: "http://localhost:3001"
+        baseUrl: API_BASE_URL
       });
 
       let data: any;
