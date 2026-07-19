@@ -93,25 +93,37 @@ export default function Dashboard() {
 
       if (hasModifier) {
         // Search shortcut: CMD + K or CMD + /
-        if (e.key === "k" || e.key === "/") {
+        const isK = e.key === "k" || e.key === "K" || e.code === "KeyK";
+        const isSlash = e.key === "/";
+        if (isK || isSlash) {
           e.preventDefault();
-          const searchInput = document.getElementById("market-search-input");
-          if (searchInput) {
-            setActiveTab("Markets");
-            setTimeout(() => searchInput.focus(), 50);
-          } else {
-            const aiInput = document.getElementById("ai-prompt-input");
-            if (aiInput) aiInput.focus();
-          }
+          setActiveTab("Markets");
+          setTimeout(() => {
+            const searchInput = document.getElementById("market-search-input");
+            if (searchInput) {
+              searchInput.focus();
+            } else {
+              const aiInput = document.getElementById("ai-prompt-input");
+              if (aiInput) aiInput.focus();
+            }
+          }, 100);
           return;
         }
 
         // Tabs switching: CMD + 1 to CMD + 6
-        const keyVal = parseInt(e.key);
-        if (!isNaN(keyVal) && keyVal >= 1 && keyVal <= 6) {
+        let digit: number | null = null;
+        if (e.code && e.code.startsWith("Digit")) {
+          const parsed = parseInt(e.code.replace("Digit", ""));
+          if (!isNaN(parsed)) digit = parsed;
+        } else {
+          const parsed = parseInt(e.key);
+          if (!isNaN(parsed)) digit = parsed;
+        }
+
+        if (digit !== null && digit >= 1 && digit <= 6) {
           e.preventDefault();
           const tabNames = ["Overview", "Markets", "Payouts", "Compliance", "Real Trading", "Developers"];
-          const targetTab = tabNames[keyVal - 1];
+          const targetTab = tabNames[digit - 1];
           if (targetTab) {
             setActiveTab(targetTab);
           }
