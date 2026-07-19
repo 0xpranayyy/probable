@@ -1,0 +1,13 @@
+node_modules
+**/node_modules
+.next
+.turbo
+dist
+.env
+.env.*
+*.db
+*.db-journal
+.git
+.vercel
+brand
+.DS_Store

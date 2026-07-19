@@ -627,7 +627,7 @@ app.patch('/v1/watchlist/:eventId/alert', authMiddleware, async (c) => {
   return c.json(item)
 })
 
-const port = 3001
+const port = process.env.PORT ? Number(process.env.PORT) : 3001
 console.log(`Server is running on port ${port}`)
 
 const server = serve({
