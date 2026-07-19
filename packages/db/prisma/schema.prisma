@@ -8,24 +8,26 @@ generator client {
 }
 
 model User {
-  id                String          @id @default(uuid())
-  email             String          @unique
-  password          String // scrypt hash: salt:hex
-  name              String?
-  walletAddress     String?         @unique // Polygon address of the user's Privy embedded wallet
-  privyWalletId     String?         @unique // Privy's internal wallet ID, needed to request signatures
-  clobApiKey        String? // Derived Polymarket CLOB API credentials (L2 auth). These
-  clobApiSecret     String? // cannot move funds on their own — every order still needs a
-  clobApiPassphrase String? // fresh EIP-712 signature from the real wallet via Privy.
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  ApiKeys           ApiKey[]
-  Sessions          Session[]
-  Markets           Market[]
-  Orders            Order[]
-  WatchlistItem     WatchlistItem[]
-  RealPositions     RealPosition[]
-  WebhookDeliveries WebhookDelivery[]
+  id                    String            @id @default(uuid())
+  email                 String            @unique
+  password              String // scrypt hash: salt:hex
+  name                  String?
+  walletAddress         String?           @unique // Polygon address of the user's Privy embedded wallet (the signer/owner EOA)
+  privyWalletId         String?           @unique // Privy's internal wallet ID, needed to request signatures
+  depositWalletAddress  String?           @unique // Polymarket deposit wallet (ERC-1967 proxy) — holds pUSD, is the real maker/signer on orders
+  depositWalletDeployed Boolean           @default(false) // Set once the WALLET-CREATE relayer tx is confirmed on-chain
+  clobApiKey            String? // Derived Polymarket CLOB API credentials (L2 auth). These
+  clobApiSecret         String? // cannot move funds on their own — every order still needs a
+  clobApiPassphrase     String? // fresh EIP-712 signature from the real wallet via Privy.
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  ApiKeys               ApiKey[]
+  Sessions              Session[]
+  Markets               Market[]
+  Orders                Order[]
+  WatchlistItem         WatchlistItem[]
+  RealPositions         RealPosition[]
+  WebhookDeliveries     WebhookDelivery[]
 }
 
 // A real order placed against Polymarket's actual CLOB (mainnet). Separate
@@ -112,10 +114,10 @@ model WebhookDelivery {
   userId     String
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   webhookUrl String
-  event      String   // e.g. trade.executed
-  payload    String   // JSON stringified payload
-  statusCode Int?     // HTTP response status (e.g. 200, 500)
-  status     String   // SUCCESS, FAILED
-  error      String?  // Error message if failed
+  event      String // e.g. trade.executed
+  payload    String // JSON stringified payload
+  statusCode Int? // HTTP response status (e.g. 200, 500)
+  status     String // SUCCESS, FAILED
+  error      String? // Error message if failed
   createdAt  DateTime @default(now())
 }

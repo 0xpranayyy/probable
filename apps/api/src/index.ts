@@ -4,11 +4,19 @@ import { serve } from '@hono/node-server'
 import { prisma, User } from '@probable/db'
 import { scryptSync, randomBytes, timingSafeEqual } from 'node:crypto'
 
+// viem represents wei-precision values as native BigInt. The Polymarket
+// relayer client's HTTP layer JSON.stringifies request/response bodies
+// without a BigInt-safe replacer, which throws. This is the standard,
+// narrowly-scoped fix (serialize BigInt as its decimal string) rather than
+// patching viem or the relayer client itself.
+;(BigInt.prototype as any).toJSON = function () { return this.toString() }
+
 // Import services
 import { WalletService, getPrivy } from './services/wallet'
 import { PolymarketService } from './services/polymarket'
 import { LiveMarketsService } from './services/polymarketLive'
 import { PolymarketTradingService } from './services/polymarketTrading'
+import { DepositWalletService } from './services/depositWallet'
 import { RealtimeService } from './services/realtime'
 import { AiService } from './services/ai'
 import { NotificationService } from './services/notifications'
@@ -516,6 +524,23 @@ app.get('/v1/live/book/:tokenId', async (c) => {
 // by Polymarket for real if the wallet has no funds/allowance — that is
 // correct behavior, not a bug.
 
+// Derives + deploys (if needed) the user's Polymarket deposit wallet — the
+// smart-contract proxy that actually holds pUSD and places orders under
+// CLOB V2. Real, gasless (sponsored by Polymarket's relayer), idempotent.
+app.post('/v1/live/wallet/deposit', authMiddleware, async (c) => {
+  const user = c.get('user')
+  try {
+    return c.json(await DepositWalletService.getOrCreateDepositWallet(user.id))
+  } catch (err: any) {
+    return c.json({ error: err.message }, 400)
+  }
+})
+
+app.get('/v1/live/wallet/deposit', authMiddleware, async (c) => {
+  const user = c.get('user')
+  return c.json(await DepositWalletService.getStatus(user.id))
+})
+
 app.get('/v1/live/wallet/allowance', authMiddleware, async (c) => {
   const user = c.get('user')
   try {
@@ -525,16 +550,14 @@ app.get('/v1/live/wallet/allowance', authMiddleware, async (c) => {
   }
 })
 
-// Builds and signs (via Privy) the on-chain approve() transaction granting
-// Polymarket's Exchange contract an allowance over the wallet's USDC.e.
-// Returns the signed transaction WITHOUT broadcasting it — broadcasting
-// spends real gas and is a deliberate separate step, not automatic.
+// Submits a real, gasless approve() call from the deposit wallet, executed
+// immediately via Polymarket's relayer (sponsored gas — nothing for the
+// user to pay or separately broadcast).
 app.post('/v1/live/wallet/approve', authMiddleware, async (c) => {
   const user = c.get('user')
   const body = await c.req.json().catch(() => ({}))
   try {
-    const signed = await PolymarketTradingService.buildApproveTransaction(user.id, body.amount || 'max')
-    return c.json({ ...signed, broadcast: false, note: 'Signed but not sent — broadcasting this spends real MATIC/POL gas.' })
+    return c.json(await PolymarketTradingService.approvePusd(user.id, body.amount || 'max'))
   } catch (err: any) {
     return c.json({ error: err.message }, 400)
   }
