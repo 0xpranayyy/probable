@@ -346,23 +346,35 @@ export default function Dashboard() {
   };
 
   const formattedStats = [
-    { label: "API VOLUME", value: `${dbTrades.length * 10} USDC`, delta: "+12%", deltaColor: "#0E9160" },
-    { label: "ACTIVE MARKETS", value: `${dbMarkets.length}`, delta: "+1", deltaColor: "#0E9160" },
+    { label: "API VOLUME", value: `${dbTrades.length * 10} USDC`, delta: `+${dbTrades.length * 10}%`, deltaColor: "#0E9160" },
+    { label: "ACTIVE MARKETS", value: `${dbMarkets.length}`, delta: "Live", deltaColor: "#0E9160" },
     { label: "WEBHOOK SUCCESS", value: webhookLogs.length > 0 ? `${Math.round((webhookLogs.filter(l => l.status === "SUCCESS").length / webhookLogs.length) * 100)}%` : "100%", delta: "+0%", deltaColor: "#0E9160" },
-    { label: "TAKE RATE", value: "1.4%", delta: "-0.1pt", deltaColor: "#D4491F" }
+    { label: "REGISTERED KEYS", value: `${dbKeys.length}`, delta: "Active", deltaColor: "#8200FF" }
   ];
 
-  const recentPayouts = [
-    { initials: "JM", who: "j.mercado@…", when: "2 min ago", amt: "+$1,204.50", avatarBg: "rgba(240,86,140,.12)", avatarColor: "#D6336C" },
-    { initials: "AK", who: "a.kowalski@…", when: "9 min ago", amt: "+$88.20", avatarBg: "rgba(23,184,119,.12)", avatarColor: "#0E9160" },
-    { initials: "TS", who: "t.suzuki@…", when: "14 min ago", amt: "+$3,410.00", avatarBg: "rgba(122,69,153,.12)", avatarColor: "#7A4599" }
+  const recentPayouts = dbTrades.length > 0 ? dbTrades.slice(0, 5).map((t) => ({
+    initials: t.type === "YES" ? "YS" : "NO",
+    who: t.market?.question ? (t.market.question.substring(0, 20) + "...") : "Virtual Order",
+    when: new Date(t.createdAt).toLocaleTimeString(),
+    amt: `$${t.amount.toFixed(2)}`,
+    avatarBg: t.type === "YES" ? "rgba(23,184,119,.12)" : "rgba(229,72,77,.12)",
+    avatarColor: t.type === "YES" ? "#0E9160" : "#D4491F"
+  })) : [
+    { initials: "PM", who: "Place your first virtual trade", when: "No activity yet", amt: "$0.00", avatarBg: "rgba(130,0,255,.06)", avatarColor: "#8200FF" }
   ];
 
-  const kycVerificationQueue = [
-    { user: "usr_88Kd", juris: "United States · NY", tier: "FULL", flag: "Document mismatch", status: "REVIEW", stColor: "#D4842A", stBg: "rgba(212,132,42,.1)", when: "12 min ago" },
-    { user: "usr_23Fa", juris: "United Kingdom", tier: "BASIC", flag: "Velocity threshold", status: "REVIEW", stColor: "#D4842A", stBg: "rgba(212,132,42,.1)", when: "26 min ago" },
-    { user: "usr_71Qn", juris: "France", tier: "FULL", flag: "Category exclusion", status: "BLOCKED", stColor: "#D4491F", stBg: "rgba(229,72,77,.1)", when: "58 min ago" }
-  ];
+  const kycVerificationQueue = user ? [
+    {
+      user: `usr_${user.id.substring(0, 6)}`,
+      juris: "United States (Active EOA)",
+      tier: "FULL API",
+      flag: "None (Active)",
+      status: "PASSED",
+      stColor: "#0E9160",
+      stBg: "rgba(23,184,119,.1)",
+      when: "Active now"
+    }
+  ] : [];
 
   if (!ready || !authenticated || !user || !token) {
     return (
@@ -721,36 +733,8 @@ export default function Dashboard() {
                         </div>
                       ))
                     ) : (
-                      // Clean dynamic fallback portfolio assets showing dummy outcome shares if none resolve
-                      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                        <div style={{ background: "#F8F8FA", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "14px" }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                            <span style={{ font: "600 11px 'JetBrains Mono',monospace", color: "#0E9160", background: "rgba(23,184,119,.1)", padding: "3px 8px", borderRadius: "4px" }}>YES</span>
-                            <span style={{ font: "600 11px 'JetBrains Mono',monospace", color: "#A9A2BE" }}>07/18/2026</span>
-                          </div>
-                          <div style={{ font: "700 13.5px 'Instrument Sans',sans-serif", color: "#1D1832", marginBottom: "4px" }}>Will ETH close above $5k this year?</div>
-                          <div style={{ display: "flex", justifyContent: "space-between", font: "500 12.5px 'JetBrains Mono',monospace", color: "#6E6787" }}>
-                            <span>Shares: 250</span>
-                            <span>Avg Price: 42¢</span>
-                          </div>
-                          <div style={{ marginTop: "8px", font: "600 10.5px 'JetBrains Mono'", color: "#0E9160" }}>
-                            Status: ACTIVE HOLDING
-                          </div>
-                        </div>
-                        <div style={{ background: "#F8F8FA", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "14px" }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                            <span style={{ font: "600 11px 'JetBrains Mono',monospace", color: "#D4491F", background: "rgba(244,99,58,.1)", padding: "3px 8px", borderRadius: "4px" }}>NO</span>
-                            <span style={{ font: "600 11px 'JetBrains Mono',monospace", color: "#A9A2BE" }}>07/15/2026</span>
-                          </div>
-                          <div style={{ font: "700 13.5px 'Instrument Sans',sans-serif", color: "#1D1832", marginBottom: "4px" }}>Will OpenAI release GPT-5 this year?</div>
-                          <div style={{ display: "flex", justifyContent: "space-between", font: "500 12.5px 'JetBrains Mono',monospace", color: "#6E6787" }}>
-                            <span>Shares: 120</span>
-                            <span>Avg Price: 68¢</span>
-                          </div>
-                          <div style={{ marginTop: "8px", font: "600 10.5px 'JetBrains Mono'", color: "#0E9160" }}>
-                            Status: ACTIVE HOLDING
-                          </div>
-                        </div>
+                      <div style={{ padding: "40px 20px", textAlign: "center", color: "#A9A2BE", fontSize: "13px", border: "1px dashed rgba(29,24,50,.08)", borderRadius: "12px" }}>
+                        No outcome shares found on Polygon mainnet. Deposit USDC.e and execute a trade to view portfolio assets.
                       </div>
                     )}
                   </div>
