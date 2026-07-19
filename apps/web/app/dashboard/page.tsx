@@ -379,7 +379,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#FFFBF7", color: "#1D1832", fontFamily: "'Instrument Sans',sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#F8F8FA", color: "#1D1832", fontFamily: "'Instrument Sans',sans-serif" }}>
       <Ticker />
       <Navbar />
 
@@ -451,7 +451,7 @@ export default function Dashboard() {
                           value={aiPrompt}
                           onChange={(e) => setAiPrompt(e.target.value)}
                           placeholder="e.g. Will Apple release a folding phone in Q3 2026?"
-                          style={{ flex: 1, background: "#FFFBF7", border: "1px solid rgba(29,24,50,.12)", borderRadius: "9999px", padding: "12px 20px", fontSize: "13.5px", outline: "none" }}
+                          style={{ flex: 1, background: "#F8F8FA", border: "1px solid rgba(29,24,50,.12)", borderRadius: "9999px", padding: "12px 20px", fontSize: "13.5px", outline: "none" }}
                         />
                         <button
                           onClick={handleGenerateDraft}
@@ -526,7 +526,7 @@ export default function Dashboard() {
                         placeholder="Search active pools... (Press ⌘K)"
                         style={{
                           width: "100%",
-                          background: "#FFFBF7",
+                          background: "#F8F8FA",
                           border: "1px solid rgba(29,24,50,.12)",
                           borderRadius: "9999px",
                           padding: "12px 42px 12px 20px",
@@ -543,7 +543,7 @@ export default function Dashboard() {
                   
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
                     {dbMarkets.filter(m => m.question.toLowerCase().includes(searchQuery.toLowerCase())).map((m) => (
-                      <div key={m.id} style={{ background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "16px", padding: "24px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                      <div key={m.id} style={{ background: "#F8F8FA", border: "1px solid rgba(29,24,50,.08)", borderRadius: "16px", padding: "24px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                         <div>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
                             <span style={{ font: "600 10px 'JetBrains Mono',monospace", color: "#8200FF", background: "rgba(130,0,255,.12)", padding: "4px 10px", borderRadius: "999px", letterSpacing: "0.5px" }}>LIVE RESOLUTION</span>
@@ -609,7 +609,7 @@ export default function Dashboard() {
 
                   <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                     {dbTrades.map((t, i) => (
-                      <div key={i} style={{ background: "#FFFBF7", border: "1px solid rgba(29,24,50,.07)", borderRadius: "14px", padding: "18px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div key={i} style={{ background: "#F8F8FA", border: "1px solid rgba(29,24,50,.07)", borderRadius: "14px", padding: "18px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div>
                           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
                             <span style={{ font: "700 11px 'JetBrains Mono',monospace", color: t.type === "YES" ? "#0E9160" : "#D4491F", background: t.type === "YES" ? "rgba(23,184,119,.1)" : "rgba(229,72,77,.1)", padding: "3px 8px", borderRadius: "4px" }}>{t.type}</span>
@@ -661,7 +661,7 @@ export default function Dashboard() {
                           <span style={{ fontSize: "14px", fontWeight: 600, color: "#120F24" }}>Connected to Polygon Mainnet</span>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                          <div style={{ background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "15px" }}>
+                          <div style={{ background: "#F8F8FA", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "15px" }}>
                             <div style={{ fontSize: "11px", color: "#A9A2BE", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "4px" }}>Wallet Address</div>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                               <span style={{ font: "500 13px 'JetBrains Mono',monospace", color: "#1D1832", wordBreak: "break-all" }}>{wallet.address}</span>
@@ -669,7 +669,7 @@ export default function Dashboard() {
                                 style={{ background: "none", border: "none", color: "#D6336C", font: "600 12px 'Instrument Sans'", cursor: "pointer", marginLeft: "10px" }}>Copy</button>
                             </div>
                           </div>
-                          <div style={{ background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "15px" }}>
+                          <div style={{ background: "#F8F8FA", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "15px" }}>
                             <div style={{ fontSize: "11px", color: "#A9A2BE", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "4px" }}>USDC.e Balance</div>
                             <div style={{ font: "700 22px 'JetBrains Mono',monospace", color: "#1D1832" }}>{wallet.balance !== undefined ? wallet.balance.toFixed(2) : "0.00"} <span style={{ fontSize: "14px", fontWeight: 500, color: "#6E6787" }}>USDC.e</span></div>
                           </div>
@@ -685,7 +685,7 @@ export default function Dashboard() {
                   <div style={{ background: "#fff", border: "1px solid rgba(29,24,50,.08)", borderRadius: "16px", padding: "24px" }}>
                     <div style={{ font: "700 16px 'Bricolage Grotesque',sans-serif", marginBottom: "8px" }}>Polymarket Contract Allowance</div>
                     <div style={{ color: "#6E6787", fontSize: "13.5px", marginBottom: "16px" }}>Grant Polymarket's Exchange contract permission to spend your USDC.e tokens to place bids and asks.</div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "15px 18px", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#F8F8FA", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "15px 18px", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
                       <div>
                         <div style={{ fontSize: "11px", color: "#A9A2BE", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "4px" }}>Current Approved Allowance</div>
                         <div style={{ font: "600 16px 'JetBrains Mono',monospace" }}>{allowance !== null ? `${allowance.toFixed(2)} USDC` : "0.00 USDC"}</div>
@@ -705,7 +705,7 @@ export default function Dashboard() {
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     {positions.length > 0 ? (
                       positions.map((pos, i) => (
-                        <div key={i} style={{ background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "14px" }}>
+                        <div key={i} style={{ background: "#F8F8FA", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "14px" }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                             <span style={{ font: "600 11px 'JetBrains Mono',monospace", color: pos.side === "BUY" ? "#0E9160" : "#D4491F", background: pos.side === "BUY" ? "rgba(23,184,119,.1)" : "rgba(244,99,58,.1)", padding: "3px 8px", borderRadius: "4px" }}>{pos.side}</span>
                             <span style={{ font: "600 11px 'JetBrains Mono',monospace", color: "#A9A2BE" }}>{new Date(pos.createdAt).toLocaleDateString()}</span>
@@ -723,7 +723,7 @@ export default function Dashboard() {
                     ) : (
                       // Clean dynamic fallback portfolio assets showing dummy outcome shares if none resolve
                       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                        <div style={{ background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "14px" }}>
+                        <div style={{ background: "#F8F8FA", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "14px" }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                             <span style={{ font: "600 11px 'JetBrains Mono',monospace", color: "#0E9160", background: "rgba(23,184,119,.1)", padding: "3px 8px", borderRadius: "4px" }}>YES</span>
                             <span style={{ font: "600 11px 'JetBrains Mono',monospace", color: "#A9A2BE" }}>07/18/2026</span>
@@ -737,7 +737,7 @@ export default function Dashboard() {
                             Status: ACTIVE HOLDING
                           </div>
                         </div>
-                        <div style={{ background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "14px" }}>
+                        <div style={{ background: "#F8F8FA", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "14px" }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                             <span style={{ font: "600 11px 'JetBrains Mono',monospace", color: "#D4491F", background: "rgba(244,99,58,.1)", padding: "3px 8px", borderRadius: "4px" }}>NO</span>
                             <span style={{ font: "600 11px 'JetBrains Mono',monospace", color: "#A9A2BE" }}>07/15/2026</span>
@@ -773,7 +773,7 @@ export default function Dashboard() {
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                         {dbKeys.map((ak, i) => (
-                          <div key={i} style={{ background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "15px 18px" }}>
+                          <div key={i} style={{ background: "#F8F8FA", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "15px 18px" }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "7px" }}>
                               <span style={{ fontWeight: 700, fontSize: "13.5px" }}>key_{i + 1}</span>
                               <span style={{ font: "600 10px 'JetBrains Mono',monospace", color: ak.isActive ? "#0E9160" : "#D4491F", background: ak.isActive ? "rgba(23,184,119,.1)" : "rgba(229,72,77,.1)", padding: "3px 9px", borderRadius: "999px" }}>{ak.isActive ? "ACTIVE" : "INACTIVE"}</span>
@@ -794,7 +794,7 @@ export default function Dashboard() {
                           value={webhookUrl}
                           onChange={(e) => setWebhookUrl(e.target.value)}
                           placeholder="https://webhook.site/..."
-                          style={{ width: "100%", background: "#FFFBF7", border: "1px solid rgba(29,24,50,.12)", borderRadius: "10px", padding: "10px 14px", font: "500 13px 'JetBrains Mono',monospace" }}
+                          style={{ width: "100%", background: "#F8F8FA", border: "1px solid rgba(29,24,50,.12)", borderRadius: "10px", padding: "10px 14px", font: "500 13px 'JetBrains Mono',monospace" }}
                         />
                         <button 
                           onClick={() => alert("Webhook target URL saved!")}
@@ -814,7 +814,7 @@ export default function Dashboard() {
                         <div style={{ textAlign: "center", padding: "40px", color: "#A9A2BE", fontSize: "12.5px" }}>No webhooks dispatched yet. Trigger a trade to see logs!</div>
                       ) : (
                         webhookLogs.map((log, i) => (
-                          <div key={i} style={{ background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "10px", padding: "12px" }}>
+                          <div key={i} style={{ background: "#F8F8FA", border: "1px solid rgba(29,24,50,.08)", borderRadius: "10px", padding: "12px" }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                               <span style={{ font: "600 11.5px 'JetBrains Mono',monospace", color: "#7A4599" }}>{log.event}</span>
                               <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
@@ -854,7 +854,7 @@ export default function Dashboard() {
                         <select
                           value={embedMarket}
                           onChange={(e) => setEmbedMarket(e.target.value)}
-                          style={{ width: "100%", background: "#FFFBF7", border: "1px solid rgba(29,24,50,.12)", borderRadius: "8px", padding: "8px 12px", fontSize: "13.5px" }}>
+                          style={{ width: "100%", background: "#F8F8FA", border: "1px solid rgba(29,24,50,.12)", borderRadius: "8px", padding: "8px 12px", fontSize: "13.5px" }}>
                           {dbMarkets.map((m) => (
                             <option key={m.id} value={m.id}>{m.question}</option>
                           ))}
@@ -867,7 +867,7 @@ export default function Dashboard() {
                           <select
                             value={embedColor}
                             onChange={(e) => setEmbedColor(e.target.value)}
-                            style={{ width: "100%", background: "#FFFBF7", border: "1px solid rgba(29,24,50,.12)", borderRadius: "8px", padding: "8px 12px", fontSize: "13.5px" }}>
+                            style={{ width: "100%", background: "#F8F8FA", border: "1px solid rgba(29,24,50,.12)", borderRadius: "8px", padding: "8px 12px", fontSize: "13.5px" }}>
                             <option value="#8200FF">Purple Presets (Run)</option>
                             <option value="#0E9160">Green Presets</option>
                             <option value="#4914FF">Blue Presets (Partner)</option>
@@ -879,7 +879,7 @@ export default function Dashboard() {
                           <div style={{ display: "flex", border: "1px solid rgba(29,24,50,.12)", borderRadius: "9999px", overflow: "hidden" }}>
                             <button
                               onClick={() => setEmbedTheme("light")}
-                              style={{ flex: 1, border: "none", background: embedTheme === "light" ? "#120F24" : "#FFFBF7", color: embedTheme === "light" ? "#fff" : "#1D1832", font: "600 12px 'Instrument Sans'", padding: "8px 0", cursor: "pointer" }}>Light</button>
+                              style={{ flex: 1, border: "none", background: embedTheme === "light" ? "#120F24" : "#F8F8FA", color: embedTheme === "light" ? "#fff" : "#1D1832", font: "600 12px 'Instrument Sans'", padding: "8px 0", cursor: "pointer" }}>Light</button>
                             <button
                               onClick={() => setEmbedTheme("dark")}
                               style={{ flex: 1, border: "none", background: embedTheme === "dark" ? "#120F24" : "#fff", color: embedTheme === "dark" ? "#fff" : "#1D1832", font: "600 12px 'Instrument Sans'", padding: "8px 0", cursor: "pointer" }}>Dark</button>
@@ -893,7 +893,7 @@ export default function Dashboard() {
                           <input
                             value={embedWidth}
                             onChange={(e) => setEmbedWidth(e.target.value)}
-                            style={{ width: "100%", background: "#FFFBF7", border: "1px solid rgba(29,24,50,.12)", borderRadius: "8px", padding: "8px 12px", font: "500 13px 'JetBrains Mono'" }}
+                            style={{ width: "100%", background: "#F8F8FA", border: "1px solid rgba(29,24,50,.12)", borderRadius: "8px", padding: "8px 12px", font: "500 13px 'JetBrains Mono'" }}
                           />
                         </div>
                         <div>
@@ -901,7 +901,7 @@ export default function Dashboard() {
                           <input
                             value={embedHeight}
                             onChange={(e) => setEmbedHeight(e.target.value)}
-                            style={{ width: "100%", background: "#FFFBF7", border: "1px solid rgba(29,24,50,.12)", borderRadius: "8px", padding: "8px 12px", font: "500 13px 'JetBrains Mono'" }}
+                            style={{ width: "100%", background: "#F8F8FA", border: "1px solid rgba(29,24,50,.12)", borderRadius: "8px", padding: "8px 12px", font: "500 13px 'JetBrains Mono'" }}
                           />
                         </div>
                       </div>
@@ -920,7 +920,7 @@ export default function Dashboard() {
                     </div>
 
                     {/* Preview Live */}
-                    <div style={{ background: "#FFFBF7", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "16px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                    <div style={{ background: "#F8F8FA", border: "1px solid rgba(29,24,50,.08)", borderRadius: "12px", padding: "16px", display: "flex", flexDirection: "column", alignItems: "center" }}>
                       <div style={{ font: "600 11.5px 'JetBrains Mono'", color: "#A9A2BE", marginBottom: "12px" }}>LIVE IFRAME PREVIEW</div>
                       <div style={{ width: "100%", height: "220px", background: embedTheme === "light" ? "#fff" : "#120F24", border: "1px solid rgba(29,24,50,.08)", borderRadius: "10px", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "20px" }}>
                         <div>
@@ -972,7 +972,7 @@ export default function Dashboard() {
                   placeholder="e.g. Will OpenAI release GPT-5 this year?"
                   required
                   disabled={creatingMarket}
-                  style={{ width: "100%", background: "#FFFBF7", border: "1px solid rgba(29,24,50,.12)", borderRadius: "10px", padding: "12px 14px", fontSize: "14px" }}
+                  style={{ width: "100%", background: "#F8F8FA", border: "1px solid rgba(29,24,50,.12)", borderRadius: "10px", padding: "12px 14px", fontSize: "14px" }}
                 />
               </div>
 
@@ -983,7 +983,7 @@ export default function Dashboard() {
                   value={newCloses}
                   onChange={(e) => setNewCloses(e.target.value)}
                   disabled={creatingMarket}
-                  style={{ width: "100%", background: "#FFFBF7", border: "1px solid rgba(29,24,50,.12)", borderRadius: "10px", padding: "12px 14px", fontSize: "14px" }}
+                  style={{ width: "100%", background: "#F8F8FA", border: "1px solid rgba(29,24,50,.12)", borderRadius: "10px", padding: "12px 14px", fontSize: "14px" }}
                 />
               </div>
 
@@ -993,7 +993,7 @@ export default function Dashboard() {
                   value={newOracle}
                   onChange={(e) => setNewOracle(e.target.value)}
                   disabled={creatingMarket}
-                  style={{ width: "100%", background: "#FFFBF7", border: "1px solid rgba(29,24,50,.12)", borderRadius: "10px", padding: "12px 14px", fontSize: "14px" }}>
+                  style={{ width: "100%", background: "#F8F8FA", border: "1px solid rgba(29,24,50,.12)", borderRadius: "10px", padding: "12px 14px", fontSize: "14px" }}>
                   <option value="oracle:consensus">Consensus Oracle</option>
                   <option value="oracle:gemini">Gemini Verification Oracle</option>
                   <option value="oracle:custom">Webhook Override</option>
@@ -1011,7 +1011,7 @@ export default function Dashboard() {
                   type="button"
                   onClick={() => setIsModalOpen(false)}
                   disabled={creatingMarket}
-                  style={{ flex: 1, background: "#FFFBF7", border: "1px solid rgba(29,24,50,.14)", borderRadius: "9999px", padding: "12px", font: "700 14px 'Instrument Sans'", cursor: "pointer" }}>
+                  style={{ flex: 1, background: "#F8F8FA", border: "1px solid rgba(29,24,50,.14)", borderRadius: "9999px", padding: "12px", font: "700 14px 'Instrument Sans'", cursor: "pointer" }}>
                   Cancel
                 </button>
                 <button 
